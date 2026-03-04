@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zaragoza Map · Spain 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: #f7f6f3; }
+
+  .header {
+    padding: 12px 16px;
+    background: #fff;
+    border-bottom: 1px solid #e8e5e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .header-title { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+  .header-sub { font-size: 11px; color: #aaa; margin-top: 1px; }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #888; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  #map { width: 100%; height: calc(100vh - 60px); }
+
+  .info-box {
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    max-width: 220px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 1px solid #e8e5e0;
+  }
+  .info-name { font-weight: 600; color: #1a1a1a; margin-bottom: 3px; font-size: 13px; }
+  .info-type { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; }
+  .info-note { color: #666; line-height: 1.4; }
+  .type-hotel  { color: #e07020; }
+  .type-church { color: #c0392b; }
+  .type-site   { color: #2980b9; }
+  .type-plaza  { color: #2980b9; }
+  .type-food   { color: #27ae60; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">🏛 Zaragoza · Mar 23–24</div>
+    <div class="header-sub">Spain 2026 · 10 locations</div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#e07020"></div> Hotel</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c0392b"></div> Church</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2980b9"></div> Site / Plaza</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div> Restaurant</div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const PLACES = [
+  {
+    name: "🏨 Catalonia El Pilar",
+    type: "hotel", typeLabel: "Hotel · Your Base",
+    lat: 41.6560204, lng: -0.8813058,
+    note: "Casco Antiguo · right by Plaza del Pilar · 4.6★",
+    mapsUrl: "https://maps.google.com/?cid=4225154226224468849"
+  },
+  {
+    name: "Basílica del Pilar",
+    type: "church", typeLabel: "Basilica",
+    lat: 41.6568982, lng: -0.8785056,
+    note: "Iconic baroque basilica · climb the tower for views · 4.8★",
+    mapsUrl: "https://maps.google.com/?cid=3213200630656087169"
+  },
+  {
+    name: "Plaza del Pilar",
+    type: "plaza", typeLabel: "Plaza",
+    lat: 41.6563468, lng: -0.8789063,
+    note: "Heart of Zaragoza · stunning at sunset · 4.8★",
+    mapsUrl: "https://maps.google.com/?cid=13574183222196343141"
+  },
+  {
+    name: "La Seo Cathedral",
+    type: "church", typeLabel: "Cathedral · UNESCO",
+    lat: 41.6545606, lng: -0.8757358,
+    note: "Less crowded than Pilar · excellent audio guide · 4.7★",
+    mapsUrl: "https://maps.google.com/?cid=13381991985108382624"
+  },
+  {
+    name: "Puente de Piedra",
+    type: "site", typeLabel: "Bridge",
+    lat: 41.6572038, lng: -0.8753503,
+    note: "Best views of the Basílica · go at sunset · 4.7★",
+    mapsUrl: "https://maps.google.com/?cid=18431461918467237931"
+  },
+  {
+    name: "Aljafería Palace",
+    type: "site", typeLabel: "Moorish Palace",
+    lat: 41.6560942, lng: -0.8970488,
+    note: "Stunning Moorish palace · closed Sun afternoons · 4.6★",
+    mapsUrl: "https://maps.google.com/?cid=6380629443139288320"
+  },
+  {
+    name: "Murallas Romanas",
+    type: "site", typeLabel: "Roman Walls",
+    lat: 41.657143, lng: -0.8818188,
+    note: "Ancient Roman ruins · climb tourist office for aerial views · 4.5★",
+    mapsUrl: "https://maps.google.com/?cid=14204101896496828065"
+  },
+  {
+    name: "🍽 Casa Lac",
+    type: "food", typeLabel: "Restaurant · Top Pick",
+    lat: 41.6527367, lng: -0.8800939,
+    note: "Try the lamb & tomato soup · Closed Mon · 4.5★",
+    mapsUrl: "https://maps.google.com/?cid=16286301676080578204"
+  },
+  {
+    name: "🍽 El Picadillo",
+    type: "food", typeLabel: "Tapas Bar",
+    lat: 41.656159, lng: -0.88114,
+    note: "Classic tapas right next to your hotel · 4.1★",
+    mapsUrl: "https://maps.google.com/?cid=13542684945331692819"
+  },
+  {
+    name: "🍽 El Tubo (Tapas Street)",
+    type: "food", typeLabel: "Tapas District",
+    lat: 41.653053, lng: -0.87955,
+    note: "Lively tapas street in the old town · great nightlife",
+    mapsUrl: "https://maps.google.com/?cid=17813351833430386068"
+  }
+];
+
+const TYPE_COLORS = {
+  hotel:  "#e07020",
+  church: "#c0392b",
+  site:   "#2980b9",
+  plaza:  "#2980b9",
+  food:   "#27ae60"
+};
+
+function initMap() {
+  const map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 41.6555, lng: -0.878 },
+    zoom: 15,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: true,
+    styles: [
+      { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+      { featureType: "transit", stylers: [{ visibility: "off" }] }
+    ]
+  });
+
+  const infoWindow = new google.maps.InfoWindow();
+
+  PLACES.forEach(place => {
+    const color = TYPE_COLORS[place.type] || "#666";
+    const isHotel = place.type === "hotel";
+
+    const marker = new google.maps.Marker({
+      position: { lat: place.lat, lng: place.lng },
+      map,
+      title: place.name,
+      icon: {
+        path: isHotel
+          ? "M -8,-16 L 8,-16 L 8,0 L 3,0 L 3,8 L -3,8 L -3,0 L -8,0 Z"
+          : google.maps.SymbolPath.CIRCLE,
+        fillColor: color,
+        fillOpacity: 1,
+        strokeColor: "#fff",
+        strokeWeight: 2,
+        scale: isHotel ? 1.4 : 9,
+        anchor: new google.maps.Point(0, isHotel ? 8 : 0)
+      },
+      zIndex: isHotel ? 999 : 1
+    });
+
+    marker.addListener("click", () => {
+      infoWindow.setContent(`
+        <div class="info-box">
+          <div class="info-name">${place.name}</div>
+          <div class="info-type type-${place.type}">${place.typeLabel}</div>
+          <div class="info-note">${place.note}</div>
+          ${place.mapsUrl ? `<div style="margin-top:6px"><a href="${place.mapsUrl}" target="_blank" style="font-size:10px;color:#2980b9;text-decoration:none">Open in Google Maps ↗</a></div>` : ''}
+        </div>
+      `);
+      infoWindow.open(map, marker);
+    });
+  });
+}
+</script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&callback=initMap">
+</script>
+</body>
+</html>
