@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spain 2026 HQ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: #f7f6f3;
+    padding: 20px;
+  }
+
+  .widgets-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    max-width: 960px;
+  }
+
+  .widget {
+    background: #fff;
+    border: 1px solid #e8e5e0;
+    border-radius: 10px;
+    padding: 15px 17px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    transition: box-shadow 0.2s;
+  }
+  .widget:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.09); }
+
+  .widget-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+  /* ── CURRENCY ── */
+  .currency-pair {
+    font-size: 11px;
+    font-weight: 600;
+    color: #aaa;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .currency-rate {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a1a;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+  .currency-sub { font-size: 11px; color: #aaa; margin-bottom: 10px; }
+  .currency-inputs { display: flex; gap: 8px; align-items: center; }
+  .currency-inputs input {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #e0ddd8;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: #1a1a1a;
+    background: #fafaf8;
+    outline: none;
+    transition: border 0.15s;
+  }
+  .currency-inputs input:focus { border-color: #aaa; background: #fff; }
+  .currency-inputs .arrow { color: #ccc; font-size: 14px; flex-shrink: 0; }
+  .currency-inputs .flag { font-size: 14px; flex-shrink: 0; }
+
+  /* ── COUNTDOWN ── */
+  .countdown-destination {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+  }
+  .countdown-subtitle { font-size: 10px; color: #bbb; margin-bottom: 10px; }
+  .countdown-numbers {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+  }
+  .cd-block { text-align: center; }
+  .cd-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 26px;
+    font-weight: 600;
+    color: #1a1a1a;
+    background: #f4f2ee;
+    border-radius: 6px;
+    padding: 4px 8px;
+    display: block;
+    min-width: 44px;
+    line-height: 1.2;
+  }
+  .cd-label { font-size: 9px; color: #bbb; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
+  .cd-sep { font-family: 'IBM Plex Mono', monospace; font-size: 22px; color: #ddd; padding-bottom: 6px; }
+  .countdown-flight {
+    margin-top: 10px;
+    font-size: 10px;
+    color: #aaa;
+    border-top: 1px solid #f0ede8;
+    padding-top: 8px;
+  }
+  .countdown-flight strong { color: #555; }
+
+  /* ── FLIGHT ── */
+  .flight-number { font-family: 'IBM Plex Mono', monospace; font-size: 17px; font-weight: 600; color: #1a1a1a; }
+  .flight-date-line { font-size: 10px; color: #bbb; margin-bottom: 10px; margin-top: 1px; }
+  .flight-status-badge {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.06em;
+    padding: 2px 7px; border-radius: 20px; text-transform: uppercase;
+    float: right; margin-top: 2px; cursor: pointer;
+  }
+  .status-scheduled { background: #e8f4fd; color: #2980b9; }
+  .status-loading   { background: #f0f0f0; color: #aaa; }
+  .flight-route { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+  .route-airport { text-align: center; }
+  .airport-code { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: #1a1a1a; }
+  .airport-time { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #888; margin-top: 1px; }
+  .route-line { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .route-line-bar { width: 100%; height: 1px; background: linear-gradient(90deg, #ddd, #aaa, #ddd); position: relative; }
+  .route-line-bar::after { content: '✈'; position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 9px; color: #888; background: #fff; padding: 0 2px; }
+  .route-duration { font-size: 9px; color: #bbb; }
+  .flight-details-row { display: flex; gap: 10px; font-size: 11px; color: #aaa; border-top: 1px solid #f0ede8; padding-top: 8px; }
+  .flight-detail-item strong { display: block; color: #555; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 1px; }
+
+  .refresh-btn { background: none; border: none; cursor: pointer; color: #ccc; font-size: 12px; padding: 2px; border-radius: 4px; transition: color 0.15s; line-height: 1; margin-left: auto; }
+  .refresh-btn:hover { color: #888; }
+  .refresh-btn.spinning { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .last-updated { font-size: 9px; color: #ccc; margin-top: 5px; font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── WEATHER ── */
+  .weather-widget { grid-column: span 3; }
+  .weather-cities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .weather-city-block {}
+  .weather-city-name { font-size: 11px; font-weight: 600; color: #444; margin-bottom: 6px; }
+  .weather-days { display: flex; flex-direction: column; gap: 4px; }
+  .weather-day {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 8px;
+    background: #fafaf8;
+    border-radius: 6px;
+    border: 1px solid #f0ede8;
+    font-size: 11px;
+  }
+  .weather-day-date { color: #888; font-family: 'IBM Plex Mono', monospace; font-size: 10px; min-width: 52px; }
+  .weather-icon { font-size: 14px; margin: 0 6px; }
+  .weather-temps { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #333; white-space: nowrap; }
+  .weather-temps .hi { color: #e07020; font-weight: 600; }
+  .weather-temps .lo { color: #5588bb; }
+  .weather-loading { font-size: 11px; color: #bbb; padding: 8px 0; }
+  .weather-divider { width: 1px; background: #f0ede8; margin: 0 4px; }
+
+  @media (max-width: 680px) {
+    .widgets-grid { grid-template-columns: 1fr; }
+    .weather-widget { grid-column: span 1; }
+    .weather-cities { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="widgets-grid">
+
+  <!-- ══ EUR / USD ══ -->
+  <div class="widget">
+    <div class="widget-label">
+      <span class="dot" style="background:#f0a500"></span>
+      Currency
+      <button class="refresh-btn" onclick="fetchRate()" id="rateRefreshBtn">↻</button>
+    </div>
+    <div class="currency-pair">EUR / USD</div>
+    <div class="currency-rate" id="rateDisplay">—</div>
+    <div class="currency-sub" id="rateUpdated">loading…</div>
+    <div class="currency-inputs">
+      <span class="flag">🇪🇺</span>
+      <input type="number" id="eurInput" placeholder="EUR" value="1" oninput="convertFromEur()" />
+      <span class="arrow">⇄</span>
+      <input type="number" id="usdInput" placeholder="USD" oninput="convertFromUsd()" />
+      <span class="flag">🇺🇸</span>
+    </div>
+  </div>
+
+  <!-- ══ COUNTDOWN ══ -->
+  <div class="widget" id="countdownWidget">
+    <div class="widget-label">
+      <span class="dot" style="background:#2d9e5f" id="cdDot"></span>
+      <span id="cdLabelText">Countdown</span>
+    </div>
+    <div class="countdown-destination" id="cdDestination">✈ Spain</div>
+    <div class="countdown-subtitle" id="cdSubtitle"></div>
+    <div class="countdown-numbers" id="cdNumbers">
+      <div class="cd-block"><span class="cd-num" id="cdD">--</span><div class="cd-label">days</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block"><span class="cd-num" id="cdH">--</span><div class="cd-label">hrs</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block"><span class="cd-num" id="cdM">--</span><div class="cd-label">min</div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-block"><span class="cd-num" id="cdS">--</span><div class="cd-label">sec</div></div>
+    </div>
+    <div class="countdown-flight" id="cdFlightInfo"></div>
+  </div>
+
+  <!-- ══ FLIGHT AA112 ══ -->
+  <div class="widget">
+    <div class="widget-label">
+      <span class="dot" style="background:#0052cc"></span>
+      Flight Status
+      <button class="refresh-btn" onclick="renderFlight('AA112')" id="refreshAA112">↻</button>
+    </div>
+    <span class="flight-status-badge status-scheduled" id="badgeAA112" onclick="window.open('https://www.flightaware.com/live/flight/AAL112','_blank')" title="Track live">Scheduled</span>
+    <div class="flight-number">AA 112</div>
+    <div class="flight-date-line">Mar 20, 2026 · American Airlines</div>
+    <div class="flight-route">
+      <div class="route-airport">
+        <div class="airport-code">MIA</div>
+        <div class="airport-time">4:15 PM</div>
+      </div>
+      <div class="route-line">
+        <div class="route-line-bar"></div>
+        <div class="route-duration">~8h 50m</div>
+      </div>
+      <div class="route-airport">
+        <div class="airport-code">BCN</div>
+        <div class="airport-time">6:05 AM+1</div>
+      </div>
+    </div>
+    <div class="flight-details-row">
+      <div class="flight-detail-item"><strong>Terminal</strong>D</div>
+      <div class="flight-detail-item"><strong>Gate</strong>D30</div>
+      <div class="flight-detail-item"><strong>Aircraft</strong>B777</div>
+    </div>
+    <div class="last-updated"><a href="https://www.flightaware.com/live/flight/AAL112" target="_blank" style="color:#bbb;text-decoration:underline;text-underline-offset:2px">Track live on FlightAware ↗</a></div>
+  </div>
+
+  <!-- ══ FLIGHT IB337 ══ -->
+  <div class="widget">
+    <div class="widget-label">
+      <span class="dot" style="background:#d4001a"></span>
+      Flight Status
+      <button class="refresh-btn" onclick="renderFlight('IB337')" id="refreshIB337">↻</button>
+    </div>
+    <span class="flight-status-badge status-scheduled" id="badgeIB337" onclick="window.open('https://www.flightaware.com/live/flight/IBE337','_blank')" title="Track live">Scheduled</span>
+    <div class="flight-number">IB 337</div>
+    <div class="flight-date-line">Mar 28, 2026 · Iberia</div>
+    <div class="flight-route">
+      <div class="route-airport">
+        <div class="airport-code">MAD</div>
+        <div class="airport-time">11:15 AM</div>
+      </div>
+      <div class="route-line">
+        <div class="route-line-bar"></div>
+        <div class="route-duration">~9h 35m</div>
+      </div>
+      <div class="route-airport">
+        <div class="airport-code">MIA</div>
+        <div class="airport-time">2:50 PM</div>
+      </div>
+    </div>
+    <div class="flight-details-row">
+      <div class="flight-detail-item"><strong>Terminal</strong>4S</div>
+      <div class="flight-detail-item"><strong>Gate</strong>—</div>
+      <div class="flight-detail-item"><strong>Aircraft</strong>A350</div>
+    </div>
+    <div class="last-updated"><a href="https://www.flightaware.com/live/flight/IBE337" target="_blank" style="color:#bbb;text-decoration:underline;text-underline-offset:2px">Track live on FlightAware ↗</a></div>
+  </div>
+
+  <!-- ══ WEATHER (full width) ══ -->
+  <div class="widget weather-widget">
+    <div class="widget-label" style="margin-bottom:12px">
+      <span class="dot" style="background:#5599dd"></span>
+      Weather Forecast · Spain Trip
+      <button class="refresh-btn" onclick="fetchAllWeather()" id="weatherRefreshBtn" style="margin-left:auto">↻</button>
+    </div>
+    <div class="weather-cities">
+      <div class="weather-city-block">
+        <div class="weather-city-name">🏙 Barcelona &nbsp;<span style="font-weight:300;color:#bbb;font-size:10px">Mar 21–23</span></div>
+        <div class="weather-days" id="weatherBarcelona"><div class="weather-loading">Loading…</div></div>
+      </div>
+      <div class="weather-city-block">
+        <div class="weather-city-name">🏛 Zaragoza &nbsp;<span style="font-weight:300;color:#bbb;font-size:10px">Mar 23–24</span></div>
+        <div class="weather-days" id="weatherZaragoza"><div class="weather-loading">Loading…</div></div>
+      </div>
+      <div class="weather-city-block">
+        <div class="weather-city-name">👑 Madrid &nbsp;<span style="font-weight:300;color:#bbb;font-size:10px">Mar 24–28</span></div>
+        <div class="weather-days" id="weatherMadrid"><div class="weather-loading">Loading…</div></div>
+      </div>
+    </div>
+    <div class="last-updated" id="weatherUpdated" style="margin-top:8px"></div>
+  </div>
+
+</div>
+
+<script>
+// ══ EUR/USD ══════════════════════════════════════════
+let currentRate = null;
+async function fetchRate() {
+  const btn = document.getElementById('rateRefreshBtn');
+  btn.classList.add('spinning');
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD');
+    const data = await res.json();
+    currentRate = data.rates.USD;
+    document.getElementById('rateDisplay').textContent = currentRate.toFixed(4);
+    document.getElementById('rateUpdated').textContent = '1 EUR = ' + currentRate.toFixed(4) + ' USD · ' + new Date().toLocaleTimeString();
+    convertFromEur();
+  } catch(e) {
+    currentRate = 1.0842;
+    document.getElementById('rateDisplay').textContent = '1.0842';
+    document.getElementById('rateUpdated').textContent = 'Estimate (live data unavailable)';
+    convertFromEur();
+  }
+  btn.classList.remove('spinning');
+}
+function convertFromEur() {
+  if (!currentRate) return;
+  const v = parseFloat(document.getElementById('eurInput').value) || 0;
+  document.getElementById('usdInput').value = (v * currentRate).toFixed(2);
+}
+function convertFromUsd() {
+  if (!currentRate) return;
+  const v = parseFloat(document.getElementById('usdInput').value) || 0;
+  document.getElementById('eurInput').value = (v / currentRate).toFixed(2);
+}
+
+// ══ COUNTDOWN ════════════════════════════════════════
+const DEPART = new Date('2026-03-20T16:15:00'); // MIA depart 4:15 PM local
+const RETURN = new Date('2026-03-28T11:15:00'); // MAD depart 11:15 AM
+
+function updateCountdown() {
+  const now = new Date();
+  let target, label, dest, flightInfo, dotColor;
+
+  if (now < DEPART) {
+    target = DEPART;
+    label = 'Depart for Spain';
+    dest = '✈ MIA → BCN';
+    flightInfo = '<strong>AA 112</strong> · Mar 20 · departs 4:15 PM MIA';
+    dotColor = '#2d9e5f';
+  } else if (now < RETURN) {
+    target = RETURN;
+    label = 'Return Home';
+    dest = '✈ MAD → MIA';
+    flightInfo = '<strong>IB 337</strong> · Mar 28 · departs 11:15 AM MAD';
+    dotColor = '#e07020';
+  } else {
+    document.getElementById('cdDestination').textContent = '🏠 Back home!';
+    document.getElementById('cdSubtitle').textContent = 'Hope you had a great trip!';
+    document.getElementById('cdNumbers').style.display = 'none';
+    document.getElementById('cdFlightInfo').textContent = '';
+    return;
+  }
+
+  document.getElementById('cdDot').style.background = dotColor;
+  document.getElementById('cdLabelText').textContent = label;
+  document.getElementById('cdDestination').textContent = dest;
+  document.getElementById('cdFlightInfo').innerHTML = flightInfo;
+
+  const diff = target - now;
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+
+  document.getElementById('cdD').textContent = String(d).padStart(2,'0');
+  document.getElementById('cdH').textContent = String(h).padStart(2,'0');
+  document.getElementById('cdM').textContent = String(m).padStart(2,'0');
+  document.getElementById('cdS').textContent = String(s).padStart(2,'0');
+
+  const tripDate = now < DEPART ? DEPART : RETURN;
+  const opts = { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' };
+  document.getElementById('cdSubtitle').textContent = tripDate.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// ══ WEATHER ══════════════════════════════════════════
+const WMO_MAP = {
+  0:'☀️',1:'🌤',2:'⛅',3:'☁️',
+  45:'🌫',48:'🌫',
+  51:'🌦',53:'🌦',55:'🌧',
+  61:'🌧',63:'🌧',65:'🌧',
+  71:'🌨',73:'🌨',75:'🌨',
+  80:'🌦',81:'🌧',82:'🌧',
+  95:'⛈',96:'⛈',99:'⛈'
+};
+const WMO_LABEL = {
+  0:'Sunny',1:'Mostly Sunny',2:'Partly Cloudy',3:'Cloudy',
+  45:'Foggy',48:'Foggy',
+  51:'Light Drizzle',53:'Drizzle',55:'Heavy Drizzle',
+  61:'Light Rain',63:'Rain',65:'Heavy Rain',
+  71:'Light Snow',73:'Snow',75:'Heavy Snow',
+  80:'Showers',81:'Showers',82:'Heavy Showers',
+  95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'
+};
+
+const CITIES = [
+  { id:'Barcelona', lat:41.3874, lon:2.1686,  dates:['2026-03-21','2026-03-22','2026-03-23'] },
+  { id:'Zaragoza',  lat:41.6561, lon:-0.8773, dates:['2026-03-23','2026-03-24'] },
+  { id:'Madrid',    lat:40.4168, lon:-3.7038,  dates:['2026-03-24','2026-03-25','2026-03-26','2026-03-27','2026-03-28'] }
+];
+
+const DAY_LABELS = {
+  '2026-03-21':'Sat 3/21','2026-03-22':'Sun 3/22','2026-03-23':'Mon 3/23',
+  '2026-03-24':'Tue 3/24','2026-03-25':'Wed 3/25','2026-03-26':'Thu 3/26',
+  '2026-03-27':'Fri 3/27','2026-03-28':'Sat 3/28'
+};
+
+async function fetchCityWeather(city) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&temperature_unit=fahrenheit&timezone=Europe/Madrid&start_date=2026-03-20&end_date=2026-03-28`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.daily;
+}
+
+async function fetchAllWeather() {
+  const btn = document.getElementById('weatherRefreshBtn');
+  btn.classList.add('spinning');
+
+  for (const city of CITIES) {
+    document.getElementById('weather' + city.id).innerHTML = '<div class="weather-loading">Loading…</div>';
+    try {
+      const daily = await fetchCityWeather(city);
+      let html = '';
+      for (const date of city.dates) {
+        const idx = daily.time.indexOf(date);
+        if (idx === -1) continue;
+        const hi  = Math.round(daily.temperature_2m_max[idx]);
+        const lo  = Math.round(daily.temperature_2m_min[idx]);
+        const wmo = daily.weathercode[idx];
+        const icon = WMO_MAP[wmo] || '🌡';
+        const label = WMO_LABEL[wmo] || '';
+        const dayStr = DAY_LABELS[date] || date;
+        html += `<div class="weather-day">
+          <span class="weather-day-date">${dayStr}</span>
+          <span class="weather-icon" title="${label}">${icon}</span>
+          <span class="weather-temps"><span class="hi">${hi}°</span> / <span class="lo">${lo}°</span></span>
+        </div>`;
+      }
+      document.getElementById('weather' + city.id).innerHTML = html || '<div class="weather-loading">No data</div>';
+    } catch(e) {
+      document.getElementById('weather' + city.id).innerHTML = '<div class="weather-loading">Unavailable</div>';
+    }
+  }
+
+  document.getElementById('weatherUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString() + ' · °F · Open-Meteo';
+  btn.classList.remove('spinning');
+}
+
+// ══ INIT ══════════════════════════════════════════════
+fetchRate();
+fetchAllWeather();
+</script>
+</body>
+</html>
