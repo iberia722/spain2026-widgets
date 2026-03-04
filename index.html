@@ -17,9 +17,9 @@
 
   .widgets-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    max-width: 960px;
+    max-width: 860px;
   }
 
   .widget {
@@ -145,7 +145,7 @@
   .last-updated { font-size: 9px; color: #ccc; margin-top: 5px; font-family: 'IBM Plex Mono', monospace; }
 
   /* ── WEATHER ── */
-  .weather-widget { grid-column: span 3; }
+  .weather-widget { grid-column: span 2; }
   .weather-cities { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .weather-city-block {}
   .weather-city-name { font-size: 11px; font-weight: 600; color: #444; margin-bottom: 6px; }
@@ -166,7 +166,7 @@
   .weather-loading { font-size: 11px; color: #bbb; padding: 8px 0; }
   .weather-divider { width: 1px; background: #f0ede8; margin: 0 4px; }
 
-  @media (max-width: 680px) {
+  @media (max-width: 600px) {
     .widgets-grid { grid-template-columns: 1fr; }
     .weather-widget { grid-column: span 1; }
     .weather-cities { grid-template-columns: 1fr; }
@@ -176,6 +176,7 @@
 <body>
 <div class="widgets-grid">
 
+  <!-- ROW 1 ══ EUR/USD + COUNTDOWN ══ -->
   <!-- ══ EUR / USD ══ -->
   <div class="widget">
     <div class="widget-label">
@@ -207,20 +208,17 @@
       <div class="cd-block"><span class="cd-num" id="cdD">--</span><div class="cd-label">days</div></div>
       <div class="cd-sep">:</div>
       <div class="cd-block"><span class="cd-num" id="cdH">--</span><div class="cd-label">hrs</div></div>
-      <div class="cd-sep">:</div>
-      <div class="cd-block"><span class="cd-num" id="cdM">--</span><div class="cd-label">min</div></div>
-      <div class="cd-sep">:</div>
-      <div class="cd-block"><span class="cd-num" id="cdS">--</span><div class="cd-label">sec</div></div>
     </div>
     <div class="countdown-flight" id="cdFlightInfo"></div>
   </div>
 
+  <!-- ROW 2 ══ FLIGHTS ══ -->
   <!-- ══ FLIGHT AA112 ══ -->
   <div class="widget">
     <div class="widget-label">
       <span class="dot" style="background:#0052cc"></span>
       Flight Status
-      <button class="refresh-btn" onclick="renderFlight('AA112')" id="refreshAA112">↻</button>
+      <button class="refresh-btn" id="refreshAA112">↻</button>
     </div>
     <span class="flight-status-badge status-scheduled" id="badgeAA112" onclick="window.open('https://www.flightaware.com/live/flight/AAL112','_blank')" title="Track live">Scheduled</span>
     <div class="flight-number">AA 112</div>
@@ -252,7 +250,7 @@
     <div class="widget-label">
       <span class="dot" style="background:#d4001a"></span>
       Flight Status
-      <button class="refresh-btn" onclick="renderFlight('IB337')" id="refreshIB337">↻</button>
+      <button class="refresh-btn" id="refreshIB337">↻</button>
     </div>
     <span class="flight-status-badge status-scheduled" id="badgeIB337" onclick="window.open('https://www.flightaware.com/live/flight/IBE337','_blank')" title="Track live">Scheduled</span>
     <div class="flight-number">IB 337</div>
@@ -279,7 +277,7 @@
     <div class="last-updated"><a href="https://www.flightaware.com/live/flight/IBE337" target="_blank" style="color:#bbb;text-decoration:underline;text-underline-offset:2px">Track live on FlightAware ↗</a></div>
   </div>
 
-  <!-- ══ WEATHER (full width) ══ -->
+  <!-- ROW 3 ══ WEATHER STRIP ══ -->
   <div class="widget weather-widget">
     <div class="widget-label" style="margin-bottom:12px">
       <span class="dot" style="background:#5599dd"></span>
@@ -378,14 +376,11 @@ function updateCountdown() {
 
   document.getElementById('cdD').textContent = String(d).padStart(2,'0');
   document.getElementById('cdH').textContent = String(h).padStart(2,'0');
-  document.getElementById('cdM').textContent = String(m).padStart(2,'0');
-  document.getElementById('cdS').textContent = String(s).padStart(2,'0');
 
   const tripDate = now < DEPART ? DEPART : RETURN;
-  const opts = { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' };
   document.getElementById('cdSubtitle').textContent = tripDate.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
 }
-setInterval(updateCountdown, 1000);
+setInterval(updateCountdown, 60000);
 updateCountdown();
 
 // ══ WEATHER ══════════════════════════════════════════
