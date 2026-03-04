@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barcelona Map · Spain 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: #f7f6f3; }
+
+  .header {
+    padding: 12px 16px;
+    background: #fff;
+    border-bottom: 1px solid #e8e5e0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .header-title { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+  .header-sub { font-size: 11px; color: #aaa; margin-top: 1px; }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #888; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  #map { width: 100%; height: calc(100vh - 60px); }
+
+  .info-box {
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12px;
+    max-width: 220px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 1px solid #e8e5e0;
+  }
+  .info-name { font-weight: 600; color: #1a1a1a; margin-bottom: 3px; font-size: 13px; }
+  .info-type { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 5px; }
+  .info-note { color: #666; line-height: 1.4; }
+  .type-hotel  { color: #e07020; }
+  .type-site   { color: #2980b9; }
+  .type-museum { color: #8e44ad; }
+  .type-food   { color: #27ae60; }
+  .type-beach  { color: #16a085; }
+  .type-neighborhood { color: #7f8c8d; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">🏙 Barcelona · Mar 21–23</div>
+    <div class="header-sub">Spain 2026 · 12 locations</div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#e07020"></div> Hotel</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2980b9"></div> Site</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8e44ad"></div> Museum</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#27ae60"></div> Food</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#16a085"></div> Beach</div>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script>
+const PLACES = [
+  {
+    name: "🏨 HCC St. Moritz",
+    type: "hotel", typeLabel: "Hotel · Your Base",
+    lat: 41.3910625, lng: 2.1682161,
+    note: "Eixample district · 4.4★",
+    mapsUrl: "https://maps.google.com/?cid=12416651841087262807"
+  },
+  {
+    name: "Sagrada Família",
+    type: "site", typeLabel: "Landmark",
+    lat: 41.4036299, lng: 2.1743558,
+    note: "Book tickets in advance! Open Mon–Sat 9–6, Sun 10:30–6 · 4.8★",
+    mapsUrl: "https://maps.google.com/?cid=11229913421514525008"
+  },
+  {
+    name: "Park Güell",
+    type: "site", typeLabel: "Park",
+    lat: 41.4144948, lng: 2.1526945,
+    note: "Gaudí park — great city views. Timed entry required · 4.4★",
+    mapsUrl: "https://maps.google.com/?cid=9915250311879642712"
+  },
+  {
+    name: "Gothic Quarter",
+    type: "site", typeLabel: "Neighborhood",
+    lat: 41.3819247, lng: 2.1773052,
+    note: "Medieval labyrinth streets",
+    mapsUrl: "https://maps.google.com/?cid=13251136864134211503"
+  },
+  {
+    name: "La Rambla → El Born Walk",
+    type: "site", typeLabel: "Walk",
+    lat: 41.3856087, lng: 2.1698166,
+    note: "Classic Barcelona stroll · 4.4★",
+    mapsUrl: "https://maps.google.com/?cid=2647825951332941252"
+  },
+  {
+    name: "Picasso Museum",
+    type: "museum", typeLabel: "Museum",
+    lat: 41.3852706, lng: 2.1809472,
+    note: "Closed Mondays · Tue–Sun 10–7 · 4.4★",
+    mapsUrl: "https://maps.google.com/?cid=2810561113253530723"
+  },
+  {
+    name: "Barcelona Cathedral",
+    type: "site", typeLabel: "Church",
+    lat: 41.383962, lng: 2.1761991,
+    note: "Free entry mornings · roof has great views · 4.6★",
+    mapsUrl: "https://maps.google.com/?cid=1654528761399433347"
+  },
+  {
+    name: "Santa Maria del Mar",
+    type: "site", typeLabel: "Basilica",
+    lat: 41.383887, lng: 2.1820711,
+    note: "El Born · stunning Gothic basilica · 4.7★",
+    mapsUrl: "https://maps.google.com/?cid=13023447345839268192"
+  },
+  {
+    name: "Barceloneta Beach",
+    type: "beach", typeLabel: "Beach",
+    lat: 41.3783713, lng: 2.1924685,
+    note: "Mediterranean waterfront · 4.4★",
+    mapsUrl: "https://maps.google.com/?cid=2201713585473283579"
+  },
+  {
+    name: "Barrio de Gràcia",
+    type: "neighborhood", typeLabel: "Neighborhood",
+    lat: 41.4096291, lng: 2.1552782,
+    note: "Bohemian neighborhood — great for cafés & wandering",
+    mapsUrl: "https://maps.google.com/?cid=16724891438747279206"
+  },
+  {
+    name: "Plaça Sant Felip Neri",
+    type: "site", typeLabel: "Square",
+    lat: 41.383452, lng: 2.1750541,
+    note: "Hidden Gothic Quarter square — quiet & beautiful",
+    mapsUrl: "https://maps.google.com/?cid=15545699584430683130"
+  },
+  {
+    name: "Roman City Walls",
+    type: "site", typeLabel: "Historic Site",
+    lat: 41.383825, lng: 2.1747863,
+    note: "Ancient Roman ruins · 4.4★",
+    mapsUrl: "https://maps.google.com/?cid=5858346533474930061"
+  }
+];
+
+const TYPE_COLORS = {
+  hotel: "#e07020",
+  site: "#2980b9",
+  museum: "#8e44ad",
+  food: "#27ae60",
+  beach: "#16a085",
+  neighborhood: "#7f8c8d"
+};
+
+function initMap() {
+  const map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 41.393, lng: 2.172 },
+    zoom: 14,
+    mapTypeControl: false,
+    streetViewControl: false,
+    fullscreenControl: true,
+    styles: [
+      { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+      { featureType: "transit", stylers: [{ visibility: "off" }] }
+    ]
+  });
+
+  const infoWindow = new google.maps.InfoWindow();
+
+  PLACES.forEach(place => {
+    const color = TYPE_COLORS[place.type] || "#666";
+    const isHotel = place.type === "hotel";
+
+    const marker = new google.maps.Marker({
+      position: { lat: place.lat, lng: place.lng },
+      map,
+      title: place.name,
+      icon: {
+        path: isHotel
+          ? "M -8,-16 L 8,-16 L 8,0 L 3,0 L 3,8 L -3,8 L -3,0 L -8,0 Z"
+          : google.maps.SymbolPath.CIRCLE,
+        fillColor: color,
+        fillOpacity: 1,
+        strokeColor: "#fff",
+        strokeWeight: isHotel ? 2 : 2,
+        scale: isHotel ? 1.4 : 9,
+        anchor: new google.maps.Point(0, isHotel ? 8 : 0)
+      },
+      zIndex: isHotel ? 999 : 1
+    });
+
+    marker.addListener("click", () => {
+      infoWindow.setContent(`
+        <div class="info-box">
+          <div class="info-name">${place.name}</div>
+          <div class="info-type type-${place.type}">${place.typeLabel}</div>
+          <div class="info-note">${place.note}</div>
+          ${place.mapsUrl ? `<div style="margin-top:6px"><a href="${place.mapsUrl}" target="_blank" style="font-size:10px;color:#2980b9;text-decoration:none">Open in Google Maps ↗</a></div>` : ''}
+        </div>
+      `);
+      infoWindow.open(map, marker);
+    });
+  });
+}
+</script>
+<script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY&callback=initMap">
+</script>
+</body>
+</html>
