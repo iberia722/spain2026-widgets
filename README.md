@@ -1,0 +1,1 @@
+# spain2026-widgets
