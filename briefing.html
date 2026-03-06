@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇪🇸 Spain 2026 · Daily Briefing</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:linear-gradient(135deg,#0f1923 0%,#1a2d3d 50%,#0f1923 100%);color:#e8d5b0;min-height:100vh;padding:16px 14px 80px}
+.wrap{max-width:680px;margin:0 auto}
+.header{text-align:center;margin-bottom:20px;padding-top:8px}
+.header-sup{font-size:10px;letter-spacing:4px;color:#d4a843;text-transform:uppercase;margin-bottom:6px}
+.header-title{font-family:'Playfair Display',serif;font-size:24px;color:#f5e6c8;margin-bottom:4px}
+.header-sub{font-size:11px;color:#8a9980}
+.days-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:16px;scrollbar-width:none}
+.days-scroll::-webkit-scrollbar{display:none}
+.day-pill{flex-shrink:0;padding:7px 13px;border-radius:20px;border:1px solid rgba(212,168,67,0.25);background:rgba(212,168,67,0.07);color:#d4a843;font-size:11px;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;transition:all 0.2s;line-height:1.4;text-align:center}
+.day-pill.active{background:#d4a843;color:#0f1923;font-weight:600;border-color:#d4a843}
+.day-pill:hover:not(.active){background:rgba(212,168,67,0.15)}
+.today-card{background:linear-gradient(135deg,rgba(212,168,67,0.12),rgba(192,57,43,0.07));border:1px solid rgba(212,168,67,0.3);border-radius:16px;padding:16px 20px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.today-left .day-name{font-size:19px;font-weight:600;color:#f5e6c8}
+.today-left .day-date{font-size:12px;color:#d4a843;margin-top:2px}
+.today-left .day-hotel{font-size:11px;color:#8a9980;margin-top:5px}
+.weather-box{text-align:right;flex-shrink:0}
+.weather-icon{font-size:28px}
+.weather-temps{font-size:13px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:#f0e0c0;margin-top:2px}
+.weather-desc{font-size:10px;color:#8a9980;margin-top:2px}
+.tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.tab{padding:6px 12px;border-radius:16px;border:1px solid rgba(212,168,67,0.2);background:rgba(212,168,67,0.06);color:#8a9980;font-size:11px;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;transition:all 0.2s}
+.tab.active{background:#d4a843;color:#0f1923;font-weight:600;border-color:#d4a843}
+.tab:hover:not(.active){color:#d4a843;border-color:rgba(212,168,67,0.4)}
+.panel{display:none}.panel.active{display:block}
+.card{background:rgba(255,255,255,0.03);border:1px solid rgba(212,168,67,0.12);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.sec-label{font-size:9px;letter-spacing:3px;color:#d4a843;text-transform:uppercase;margin-bottom:8px;font-weight:500}
+.event-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid rgba(212,168,67,0.08)}
+.event-row:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none}
+.event-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.event-body{flex:1}
+.event-title{font-size:13px;font-weight:600;color:#f0e0c0}
+.event-detail{font-size:11px;color:#8a9980;margin-top:2px;line-height:1.5}
+.event-time{font-size:11px;color:#d4a843;font-family:'IBM Plex Mono',monospace;flex-shrink:0;margin-top:2px}
+.confirm{display:inline-block;background:rgba(212,168,67,0.1);border:1px solid rgba(212,168,67,0.2);border-radius:6px;padding:2px 8px;font-size:10px;color:#d4a843;font-family:'IBM Plex Mono',monospace;margin-top:4px}
+.big-btn{width:100%;padding:12px;background:#d4a843;color:#0f1923;border:none;border-radius:20px;font-size:13px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;margin-bottom:10px;transition:opacity 0.2s}
+.big-btn:hover{opacity:0.85}
+.big-btn:disabled{opacity:0.4;cursor:default}
+.outline-btn{padding:7px 16px;border-radius:16px;border:1px solid rgba(212,168,67,0.25);background:none;color:#d4a843;font-size:11px;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;margin-right:6px;margin-top:6px;transition:all 0.2s}
+.outline-btn:hover{background:rgba(212,168,67,0.1)}
+.ai-response{background:rgba(212,168,67,0.06);border:1px solid rgba(212,168,67,0.15);border-radius:12px;padding:14px 16px;font-size:13px;color:#ddd0b8;line-height:1.7;white-space:pre-wrap;margin-top:10px;min-height:60px}
+.ai-response.loading{color:#8a9980;font-style:italic}
+.alert-box{background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.2);border-radius:12px;padding:12px 16px;margin-bottom:10px;font-size:12px;color:#e8c4b8;line-height:1.6}
+.alert-box.clear{background:rgba(46,139,87,0.08);border-color:rgba(46,139,87,0.2);color:#b8e8c4}
+.tip-box{background:rgba(212,168,67,0.07);border:1px solid rgba(212,168,67,0.18);border-radius:12px;padding:13px 16px;margin-bottom:10px;font-size:12px;color:#ddd0b8;line-height:1.6}
+.tip-box strong{color:#d4a843}
+.currency-row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.currency-input{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(212,168,67,0.2);border-radius:10px;padding:10px 14px;color:#f0e0c0;font-size:16px;font-family:'IBM Plex Mono',monospace;outline:none}
+.currency-label{font-size:11px;color:#8a9980;text-align:center;width:40px}
+.rate-display{text-align:center;padding:10px;background:rgba(212,168,67,0.06);border-radius:10px;font-size:11px;color:#8a9980;margin-bottom:14px}
+.rate-display span{color:#d4a843;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.ref-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.ref-item{background:rgba(255,255,255,0.03);border:1px solid rgba(212,168,67,0.1);border-radius:10px;padding:10px 12px}
+.ref-item .ref-name{font-size:11px;color:#8a9980}
+.ref-item .ref-price{font-size:13px;font-weight:600;color:#d4a843;font-family:'IBM Plex Mono',monospace;margin-top:2px}
+.place-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(212,168,67,0.07)}
+.place-row:last-child{border-bottom:none}
+.place-icon{font-size:20px;flex-shrink:0}
+.place-body{flex:1}
+.place-name{font-size:13px;font-weight:600;color:#f0e0c0}
+.place-type{font-size:10px;color:#d4a843;text-transform:uppercase;letter-spacing:2px;margin-top:1px}
+.place-note{font-size:11px;color:#8a9980;margin-top:3px;line-height:1.4}
+.place-meta{display:flex;gap:10px;align-items:center;margin-top:4px}
+.stars{font-size:11px;color:#d4a843}
+.price-tag{font-size:11px;color:#8a9980}
+.map-link{font-size:10px;color:#5599dd;text-decoration:none;padding:3px 8px;border:1px solid rgba(85,153,221,0.25);border-radius:8px}
+.chat-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;max-height:320px;overflow-y:auto;padding-right:4px}
+.chat-msg{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;max-width:90%}
+.chat-msg.user{background:rgba(212,168,67,0.12);border:1px solid rgba(212,168,67,0.2);align-self:flex-end;color:#f0e0c0}
+.chat-msg.ai{background:rgba(255,255,255,0.04);border:1px solid rgba(212,168,67,0.1);align-self:flex-start;color:#ddd0b8;white-space:pre-wrap}
+.chat-input-row{display:flex;gap:8px}
+.chat-input{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(212,168,67,0.2);border-radius:12px;padding:10px 14px;color:#f0e0c0;font-size:13px;font-family:'IBM Plex Sans',sans-serif;outline:none;resize:none}
+.chat-send{padding:10px 16px;background:#d4a843;color:#0f1923;border:none;border-radius:12px;font-weight:600;font-size:13px;font-family:'IBM Plex Sans',sans-serif;cursor:pointer}
+.quick-q{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.quick-q button{padding:5px 10px;border-radius:10px;border:1px solid rgba(212,168,67,0.2);background:rgba(212,168,67,0.06);color:#d4a843;font-size:10px;font-family:'IBM Plex Sans',sans-serif;cursor:pointer}
+.reminder-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(212,168,67,0.07)}
+.reminder-item:last-child{border-bottom:none}
+.reminder-check{font-size:18px;cursor:pointer;flex-shrink:0}
+.reminder-text{font-size:13px;color:#ddd0b8;line-height:1.5;padding-top:1px}
+.reminder-text.done{text-decoration:line-through;color:#8a9980}
+.back-link{display:block;text-align:center;margin-bottom:16px;font-size:11px;color:#8a9980;text-decoration:none;letter-spacing:1px}
+.back-link:hover{color:#d4a843}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="back-link">← BACK TO DASHBOARD</a>
+  <div class="header">
+    <div class="header-sup">España · Marzo 2026</div>
+    <div class="header-title">🇪🇸 Daily Briefing</div>
+    <div class="header-sub" id="todayLabel">Loading...</div>
+  </div>
+
+  <div class="days-scroll" id="dayPills"></div>
+
+  <div id="dayHeader"></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('schedule')">📅 Schedule</div>
+    <div class="tab" onclick="switchTab('picks')">✨ AI Picks</div>
+    <div class="tab" onclick="switchTab('alerts')">🚨 Alerts</div>
+    <div class="tab" onclick="switchTab('currency')">💶 Currency</div>
+    <div class="tab" onclick="switchTab('places')">🍽️ Places</div>
+    <div class="tab" onclick="switchTab('concierge')">💬 Concierge</div>
+    <div class="tab" onclick="switchTab('reminders')">🎫 Reminders</div>
+  </div>
+
+  <div id="panel-schedule" class="panel active"></div>
+  <div id="panel-picks" class="panel"></div>
+  <div id="panel-alerts" class="panel"></div>
+  <div id="panel-currency" class="panel"></div>
+  <div id="panel-places" class="panel"></div>
+  <div id="panel-concierge" class="panel"></div>
+  <div id="panel-reminders" class="panel"></div>
+</div>
+
+<script>
+const DAYS = [
+  {
+    date:'2026-03-20', label:'Mar 20', name:'Departure Day', city:'Miami', emoji:'✈️',
+    hotel:'Home → MIA Airport',
+    weather:{icon:'☀️',hi:82,lo:72,desc:'Sunny & warm'},
+    events:[
+      {icon:'✈️',title:'AA 112 · MIA → BCN',time:'4:15 PM',detail:'Terminal D · Gate D30 · B777\nSeats 19A, 19B, 19C · Conf: IFEXMM / MB6ZW'},
+      {icon:'🧳',title:'Pack & prep',time:'Morning',detail:'Print boarding passes · Screenshot Renfe locators · Download offline maps'},
+      {icon:'🚕',title:'Head to airport',time:'~1:30 PM',detail:'Allow 2.5hrs before departure · Terminal D'}
+    ],
+    tips:['Check in online 24hrs before departure','MIA → BCN is ~8h50m overnight flight','Arrive Barcelona Sat Mar 21 at 6:05 AM GMT+1','Bring neck pillow — you\'ll want it on the B777'],
+    reminders:['Check in online (opens 24hrs before)','Download Renfe app & screenshot locators','Euros: bring ~€200 cash for arrival','Charge all devices overnight','Pack adapters — Spain uses Type C/F plugs']
+  },
+  {
+    date:'2026-03-21', label:'Mar 21', name:'Barcelona Day 1', city:'Barcelona', emoji:'🏙️',
+    hotel:'HCC St. Moritz · Conf: 6091140659',
+    weather:{icon:'⛅',hi:62,lo:52,desc:'Partly cloudy'},
+    events:[
+      {icon:'✈️',title:'AA 112 arrives BCN',time:'6:05 AM',detail:'Grab bags · Take Aerobus or taxi to hotel (€35–40)'},
+      {icon:'🏨',title:'Hotel check-in',time:'2:00 PM',detail:'HCC St. Moritz · Diputació 262-264, Eixample\nAsk to store luggage if arriving early'},
+      {icon:'⛪',title:'Sagrada Família Guided Tour',time:'11:00 AM',detail:'Meet 10 min early at meeting point\nRef: 1365576215 · Book on Viator'},
+      {icon:'🍽️',title:'Explore Eixample',time:'Evening',detail:'Walk Las Ramblas · Dinner in Gothic Quarter'}
+    ],
+    tips:['Sagrada Família is worth the €30+ ticket — skip the line you already paid for','Gothic Quarter: watch for pickpockets on Las Ramblas','Mercat de Sant Josep (La Boqueria) opens at 8 AM — great for breakfast','Grab a menú del día for lunch: 3 courses + wine for ~€12-15'],
+    reminders:['Screenshot Sagrada Família ticket ref: 1365576215','Store luggage at hotel if before 2PM check-in','Get €20-30 cash for tips & small purchases','Buy T10 metro card (10 trips ~€11.35)','Aerobus from BCN airport: €5.90 each way']
+  },
+  {
+    date:'2026-03-22', label:'Mar 22', name:'Barcelona Day 2', city:'Barcelona', emoji:'🏛️',
+    hotel:'HCC St. Moritz · Check-out Mar 23',
+    weather:{icon:'🌤️',hi:64,lo:53,desc:'Mostly sunny'},
+    events:[
+      {icon:'🎨',title:'Explore Barcelona',time:'All day',detail:'Park Güell · Casa Batlló · Passeig de Gràcia'},
+      {icon:'🍽️',title:'Dinner in El Born',time:'Evening',detail:'Trendy neighborhood near Gothic Quarter'},
+      {icon:'🧳',title:'Pack for Zaragoza',time:'Night',detail:'Train departs 11:00 AM tomorrow · Sants station'}
+    ],
+    tips:['Park Güell free zones are lovely — paid monumental zone ~€10','Casa Batlló is Gaudí\'s most psychedelic — worth the splurge','El Born neighborhood has great pintxos bars at night','Barceloneta beach is walkable if weather is nice'],
+    reminders:['Book Park Güell timed entry if not done','Pack tonight for Zaragoza — early train tomorrow','Set alarm — leave hotel by 9:30 AM for Sants','Screenshot train locator: 5WMXVS']
+  },
+  {
+    date:'2026-03-23', label:'Mar 23', name:'Zaragoza', city:'Zaragoza', emoji:'🕌',
+    hotel:'Catalonia El Pilar · Conf: 6101844399',
+    weather:{icon:'🌤️',hi:58,lo:44,desc:'Sunny & cool'},
+    events:[
+      {icon:'🚆',title:'AVE 03112 · BCN-Sants → Zaragoza',time:'11:00 AM',detail:'Arrives 12:28 PM · Car 3 · Seats 04A, 04B, 04C\nLocator: 5WMXVS · €231.30 total'},
+      {icon:'🚕',title:'Leave hotel for Sants',time:'9:30 AM',detail:'Barcelona-Sants station · Allow 30min buffer'},
+      {icon:'🏨',title:'Hotel check-in',time:'3:00 PM',detail:'Catalonia El Pilar · Manifestación 16\nWalk to El Pilar Basilica (2 min away!)'},
+      {icon:'🕌',title:'Explore Zaragoza',time:'Afternoon',detail:'Basílica del Pilar · Aljafería Palace · El Tubo tapas district'}
+    ],
+    tips:['Aljafería Palace is a hidden gem — Moorish architecture from 11th century','El Tubo tapas district: get there before 9 PM for best selection','The Pilar Basilica is FREE — light a candle for the camino','Zaragoza is compact — almost everything walkable from hotel'],
+    reminders:['Leave hotel by 9:30 AM for Sants','Have train locator ready: 5WMXVS','Check in at Catalonia El Pilar (3PM)','Screenshot tomorrow\'s train locator: VRNV7L','Next train: Zaragoza → Madrid 11:43 AM']
+  },
+  {
+    date:'2026-03-24', label:'Mar 24', name:'Madrid Arrival', city:'Madrid', emoji:'👑',
+    hotel:'Lujo en el Centro · Conf: 6175087861',
+    weather:{icon:'⛅',hi:60,lo:46,desc:'Partly cloudy'},
+    events:[
+      {icon:'🚆',title:'AVE 03304 · Zaragoza → Madrid',time:'11:43 AM',detail:'Arrives 1:44 PM · Car 3 · Seats 5A, 5B, 5C\nLocator: VRNV7L · €155.40 total'},
+      {icon:'🚕',title:'Leave hotel for Delicias',time:'10:45 AM',detail:'Zaragoza Delicias station · Check out bags first'},
+      {icon:'🏨',title:'Hotel check-in Madrid',time:'3:00 PM',detail:'Lujo en el Centro · 15 Calle San Agustín\nPrime location near Prado & Retiro'},
+      {icon:'🍽️',title:'First Madrid dinner',time:'Evening',detail:'Explore Barrio de las Letras · Try a classic taberna'}
+    ],
+    tips:['Madrid dinner time is 9-10 PM — restaurants are empty before 8:30','Your hotel is a 10-min walk from the Prado','Retiro Park is magical at sunset — 5 min from hotel','Cava Baja street in La Latina is the best tapas crawl in Madrid'],
+    reminders:['Check out bags at Zaragoza hotel before leaving','Have train locator: VRNV7L','Madrid hotel confirmation: 6175087861','Check-out is Mar 28 at 11:00 AM','Return flight IB337 is 4:25 PM Mar 28']
+  },
+  {
+    date:'2026-03-25', label:'Mar 25', name:'Madrid Day 2', city:'Madrid', emoji:'🎨',
+    hotel:'Lujo en el Centro · 4 nights',
+    weather:{icon:'🌤️',hi:62,lo:47,desc:'Mostly sunny'},
+    events:[
+      {icon:'🎨',title:'Museo del Prado',time:'Morning',detail:'World-class art — FREE after 6 PM Mon-Sat\nVelázquez, Goya, El Greco · Budget 3hrs'},
+      {icon:'🌳',title:'Retiro Park',time:'Afternoon',detail:'Rent a rowboat on the lake · Crystal Palace'},
+      {icon:'🍷',title:'Rooftop drinks',time:'Evening',detail:'Azotea del Círculo or Torre de Madrid for sunset views'}
+    ],
+    tips:['Prado free entry 6-8 PM Monday-Saturday — locals know this','Rowboat rental at Retiro lake: ~€5 for 45 min — worth it with kids','Chueca neighborhood is vibrant for evening tapas','Try patatas bravas and jamón ibérico at any corner bar'],
+    reminders:['Prado free after 6PM — plan accordingly','Book rooftop bar if popular (weekends fill up)','Check Mercado de San Miguel hours (opens 10AM)','Consider flamenco show tonight — book ahead']
+  },
+  {
+    date:'2026-03-26', label:'Mar 26', name:'Segovia Day Trip', city:'Segovia', emoji:'🏰',
+    hotel:'Return to Madrid tonight',
+    weather:{icon:'⛅',hi:55,lo:38,desc:'Cool & breezy'},
+    events:[
+      {icon:'🚆',title:'Train to Segovia',time:'Morning',detail:'AVE from Chamartín or Atocha · ~30 min · ~€12\nBuy tickets at station or Renfe app'},
+      {icon:'🏰',title:'Alcázar of Segovia',time:'11:00 AM',detail:'Fairy-tale castle — inspired Disney! · ~€6 entry'},
+      {icon:'🗼',title:'Roman Aqueduct',time:'Afternoon',detail:'2,000-year-old aqueduct · Free · Heart of old city'},
+      {icon:'🍖',title:'Cochinillo asado lunch',time:'2:00 PM',detail:'Segovia is famous for roast suckling pig\nMesón de Cándido or Casa Duque (~€30-40/pp)'}
+    ],
+    tips:['Segovia is a UNESCO World Heritage city — worth every minute','Cochinillo (suckling pig) in Segovia is a bucket-list meal','The aqueduct has no mortar — held by gravity for 2000 years','Return trains run frequently — last one back ~9 PM'],
+    reminders:['Buy Segovia train tickets in advance (sells out)','Book lunch reservation for cochinillo restaurant','Dress warm — Segovia is 1000m elevation, colder than Madrid','Bring camera — Alcázar at golden hour is stunning']
+  },
+  {
+    date:'2026-03-27', label:'Mar 27', name:'Madrid Day 4', city:'Madrid', emoji:'🌃',
+    hotel:'Last full day · Check-out tomorrow 11AM',
+    weather:{icon:'🌤️',hi:63,lo:48,desc:'Pleasant'},
+    events:[
+      {icon:'🛍️',title:'Shopping & Souvenirs',time:'Morning',detail:'Gran Vía · El Rastro flea market (Sundays only)\nMercado de San Miguel for food gifts'},
+      {icon:'🥊',title:'Optional: BJJ in Madrid',time:'Afternoon',detail:'Check local academies: Doce Monos, MMA Factory\nDrop-in usually €15-20'},
+      {icon:'🍽️',title:'Final Madrid dinner',time:'9:00 PM',detail:'Make it special — El Tormo or La Mi Venta\nSave room for sobremesa — the after-dinner conversation'}
+    ],
+    tips:['El Rastro Sunday flea market: arrive before 10 AM for best picks','Sobremesa is sacred in Spain — dinner can last 3+ hours','Duty-free at MAD airport opens early — good for last-minute gifts','Pack tonight — flight is 4:25 PM tomorrow'],
+    reminders:['Pack tonight — check-out is 11AM tomorrow','Flight IB337 MAD→MIA departs 4:25 PM','Leave hotel by 1:30 PM for airport (T4S for Iberia)','Screenshot IB337 confirmation: IFEXMM','Duty-free limit: $800 per person for US customs']
+  },
+  {
+    date:'2026-03-28', label:'Mar 28', name:'Departure Day', city:'Madrid', emoji:'🏠',
+    hotel:'Check-out 11:00 AM',
+    weather:{icon:'⛅',hi:61,lo:47,desc:'Partly cloudy'},
+    events:[
+      {icon:'🏨',title:'Check out',time:'11:00 AM',detail:'Lujo en el Centro · Leave bags at concierge if needed'},
+      {icon:'☕',title:'Last coffee in Madrid',time:'11:30 AM',detail:'Cortado + churros for the road 🥲'},
+      {icon:'✈️',title:'IB 337 · MAD → MIA',time:'4:25 PM',detail:'Arrives Miami 9:45 PM EDT\nTerminal 4S · Seats TBD · Conf: IFEXMM / MB6ZW'},
+      {icon:'🚕',title:'Head to airport',time:'1:30 PM',detail:'MAD Terminal 4S for Iberia · Allow 3hrs · ~€35 taxi'}
+    ],
+    tips:['Terminal 4S is connected to T4 by shuttle — allow extra time','US Customs declaration: declare anything over $800/person','Madrid airport has great jamón shops for last-minute gifts','Iberia lounge at T4S if you have access — comfortable'],
+    reminders:['Check out at 11AM sharp','IB337 locator: IFEXMM — have ready for check-in','Leave for airport by 1:30 PM at latest','US Customs form: each family member needs one','Welcome home — ¡Hasta la próxima España! 🇪🇸']
+  }
+];
+
+const MADRID_PLACES = [
+  {name:'El Tormo',type:'Restaurant',icon:'🍷',rating:4.8,price:'$$$',note:'Traditional Madrid taberna — jamón, wine, atmosphere. Must book ahead.',coords:[40.4168,-3.7038]},
+  {name:'La Mi Venta',type:'Restaurant',icon:'🥩',rating:4.7,price:'$$',note:'Old-school Madrid classic. Amazing chuletón (T-bone). Very local crowd.',coords:[40.4155,-3.6882]},
+  {name:'Gozar Neotaberna',type:'Restaurant',icon:'🍴',rating:4.7,price:'$$',note:'Modern take on traditional food. Creative pintxos and great wine list.',coords:[40.4146,-3.7071]},
+  {name:'Casa Benigna',type:'Restaurant',icon:'🌟',rating:4.7,price:'$$$',note:'Mediterranean fine dining. Warm and intimate. Book a week ahead.',coords:[40.4379,-3.6762]},
+  {name:'Azotea del Círculo',type:'Rooftop',icon:'🌅',rating:4.6,price:'$$',note:'Best rooftop views in Madrid. Drinks + stunning Gran Vía panorama.',coords:[40.4194,-3.6993]},
+  {name:'Torre de Madrid',type:'Rooftop',icon:'🏙️',rating:4.5,price:'$$',note:'360° views from Sabatini rooftop. Sunset is unmissable.',coords:[40.4226,-3.7122]},
+  {name:'Museo del Prado',type:'Museum',icon:'🎨',rating:4.9,price:'$',note:'World\'s greatest Spanish art collection. FREE after 6PM weekdays.',coords:[40.4138,-3.6922]},
+  {name:'Museo Reina Sofía',type:'Museum',icon:'🖼️',rating:4.8,price:'$',note:'Guernica lives here. Modern & contemporary art. FREE Mon & Wed-Sat 7-9PM.',coords:[40.4083,-3.6934]},
+  {name:'Retiro Park',type:'Park',icon:'🌳',rating:4.8,price:'Free',note:'Massive urban park. Row on the lake. Crystal Palace. Perfect afternoons.',coords:[40.4153,-3.6844]},
+  {name:'Mercado de San Miguel',type:'Food',icon:'🥘',rating:4.5,price:'$$',note:'Gourmet food market near Plaza Mayor. Great for lunch or snacks.',coords:[40.4151,-3.7091]},
+  {name:'El Rastro',type:'Market',icon:'🛍️',rating:4.4,price:'Free',note:'Massive Sunday flea market. Go early (before 10AM). Cash only.',coords:[40.4087,-3.7101]},
+  {name:'Cava Baja',type:'Tapas Street',icon:'🍺',rating:4.7,price:'$$',note:'Best tapas crawl street in Madrid. La Latina neighborhood. Start at dusk.',coords:[40.4118,-3.7091]},
+  {name:'La Paloma Cubana',type:'Cuban',icon:'🇨🇺',rating:4.4,price:'$$',note:'Solid Cuban food if you need a taste of home. Ropa vieja, mojitos.',coords:[40.4190,-3.7010]},
+  {name:'Alhambra Restaurant',type:'Cuban',icon:'🎺',rating:4.3,price:'$$',note:'Cuban-Spanish fusion. Live music some nights. Good mojitos.',coords:[40.4165,-3.6990]}
+];
+
+let currentDay = 0;
+let chatHistory = [];
+let eurRate = 1.15;
+let reminderStates = {};
+let alertCache = null;
+let picksCache = {};
+
+function getClosestDayIndex() {
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let closest = 0;
+  let minDiff = Infinity;
+  DAYS.forEach((d,i) => {
+    const dt = new Date(d.date);
+    const diff = Math.abs(dt - today);
+    if(diff < minDiff){ minDiff = diff; closest = i; }
+  });
+  return closest;
+}
+
+function init() {
+  currentDay = getClosestDayIndex();
+  const now = new Date();
+  document.getElementById('todayLabel').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  buildPills();
+  renderDay();
+  fetchRate();
+}
+
+function buildPills() {
+  const container = document.getElementById('dayPills');
+  container.innerHTML = '';
+  DAYS.forEach((d,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'day-pill' + (i===currentDay?' active':'');
+    btn.innerHTML = `<div>${d.label}</div><div style="font-size:9px;opacity:0.8">${d.city}</div>`;
+    btn.onclick = () => { currentDay=i; buildPills(); renderDay(); };
+    container.appendChild(btn);
+  });
+}
+
+function renderDay() {
+  const d = DAYS[currentDay];
+  // Header
+  document.getElementById('dayHeader').innerHTML = `
+    <div class="today-card">
+      <div class="today-left">
+        <div class="day-name">${d.emoji} ${d.name}</div>
+        <div class="day-date">${new Date(d.date).toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>
+        <div class="day-hotel">🏨 ${d.hotel}</div>
+      </div>
+      <div class="weather-box">
+        <div class="weather-icon">${d.weather.icon}</div>
+        <div class="weather-temps">${d.weather.hi}° / ${d.weather.lo}°F</div>
+        <div class="weather-desc">${d.weather.desc}</div>
+      </div>
+    </div>`;
+  renderSchedule();
+  renderReminders();
+}
+
+function renderSchedule() {
+  const d = DAYS[currentDay];
+  let html = '<div class="card"><div class="sec-label">Today\'s Schedule</div>';
+  d.events.forEach(e => {
+    html += `<div class="event-row">
+      <div class="event-icon">${e.icon}</div>
+      <div class="event-body">
+        <div class="event-title">${e.title}</div>
+        <div class="event-detail">${e.detail.replace(/\n/g,'<br>')}</div>
+      </div>
+      <div class="event-time">${e.time}</div>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('panel-schedule').innerHTML = html;
+}
+
+function renderReminders() {
+  const d = DAYS[currentDay];
+  let html = '<div class="card"><div class="sec-label">Day Checklist</div>';
+  d.reminders.forEach((r,i) => {
+    const key = d.date+'_'+i;
+    const done = reminderStates[key] || false;
+    html += `<div class="reminder-item">
+      <span class="reminder-check" onclick="toggleReminder('${key}',this)">${done?'✅':'⬜'}</span>
+      <span class="reminder-text${done?' done':''}" id="rt_${key}">${r}</span>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('panel-reminders').innerHTML = html;
+}
+
+function toggleReminder(key, el) {
+  reminderStates[key] = !reminderStates[key];
+  el.textContent = reminderStates[key] ? '✅' : '⬜';
+  const txt = document.getElementById('rt_'+key);
+  if(txt) txt.className = 'reminder-text' + (reminderStates[key]?' done':'');
+}
+
+async function loadPicks() {
+  const d = DAYS[currentDay];
+  const panel = document.getElementById('panel-picks');
+  if(picksCache[d.date]) { panel.innerHTML = picksCache[d.date]; return; }
+
+  panel.innerHTML = `<div class="card"><div class="sec-label">AI Picks for Today</div><button class="big-btn" id="genBtn" onclick="generatePicks()">✨ Generate AI Picks for ${d.name}</button></div>`;
+
+  // Show tips while waiting
+  let tipsHtml = '<div class="card"><div class="sec-label">Local Tips</div>';
+  d.tips.forEach(t => { tipsHtml += `<div class="tip-box">${t}</div>`; });
+  tipsHtml += '</div>';
+  panel.innerHTML += tipsHtml;
+}
+
+async function generatePicks() {
+  const d = DAYS[currentDay];
+  const panel = document.getElementById('panel-picks');
+  document.getElementById('genBtn').disabled = true;
+  document.getElementById('genBtn').textContent = '⏳ Generating picks...';
+
+  const prompt = `You are a Spain travel concierge for a family of 3 (father John, age 54, brown belt BJJ; wife Aymara; daughter Maria Elena) visiting ${d.city} on ${d.date} (${d.name}).
+
+Their schedule today: ${d.events.map(e=>e.title+' at '+e.time).join(', ')}.
+
+Give specific, insider recommendations for:
+🌅 MORNING: Best thing to do first
+🍽️ LUNCH: Best lunch spot and what to order  
+🌆 AFTERNOON: Top activity or experience
+🌙 DINNER: Best dinner recommendation with dish suggestions
+💡 PRO TIP: One local secret they shouldn't miss
+
+Keep it concise, specific, and practical. Use the schedule context. No generic advice.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || 'Could not generate picks.';
+
+    let html = `<div class="card"><div class="sec-label">AI Picks for Today</div><div class="ai-response">${text}</div>
+      <button class="outline-btn" onclick="generatePicks()" style="margin-top:10px">🔄 Regenerate</button></div>`;
+    let tipsHtml = '<div class="card"><div class="sec-label">Local Tips</div>';
+    d.tips.forEach(t => { tipsHtml += `<div class="tip-box">${t}</div>`; });
+    tipsHtml += '</div>';
+    picksCache[d.date] = html + tipsHtml;
+    panel.innerHTML = picksCache[d.date];
+  } catch(e) {
+    document.getElementById('genBtn').disabled = false;
+    document.getElementById('genBtn').textContent = '⚠️ Error — try again';
+  }
+}
+
+async function loadAlerts() {
+  const panel = document.getElementById('panel-alerts');
+  const d = DAYS[currentDay];
+  if(alertCache) { panel.innerHTML = alertCache; return; }
+
+  panel.innerHTML = `<div class="card"><div class="sec-label">Live Alerts</div>
+    <button class="big-btn" id="alertBtn" onclick="fetchAlerts()">🔍 Check Live Alerts for ${d.city}</button>
+    <div class="alert-box clear">✅ No cached alerts — tap above to check live status</div></div>`;
+}
+
+async function fetchAlerts() {
+  const d = DAYS[currentDay];
+  document.getElementById('alertBtn').disabled = true;
+  document.getElementById('alertBtn').textContent = '⏳ Checking live status...';
+
+  const prompt = `Search for current travel alerts for ${d.city}, Spain for a tourist visiting on ${d.date}. Check for:
+1. Renfe train disruptions or strikes
+2. Local strikes or protests (huelgas)
+3. Major road closures or metro disruptions
+4. Tourist site closures or special events
+5. Safety advisories
+
+Be specific and concise. If no issues found, say "All clear" for each category.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:800,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n') || 'Could not fetch alerts.';
+    alertCache = `<div class="card"><div class="sec-label">Live Alerts — ${d.city}</div>
+      <div class="ai-response">${text}</div>
+      <button class="outline-btn" onclick="alertCache=null;fetchAlerts()" style="margin-top:10px">🔄 Refresh</button></div>`;
+    document.getElementById('panel-alerts').innerHTML = alertCache;
+  } catch(e) {
+    document.getElementById('alertBtn').disabled = false;
+    document.getElementById('alertBtn').textContent = '⚠️ Error — tap to retry';
+  }
+}
+
+async function fetchRate() {
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=USD');
+    const data = await res.json();
+    eurRate = data.rates.USD;
+    updateCurrency();
+  } catch(e) {}
+}
+
+function updateCurrency() {
+  const eurInput = document.getElementById('eurInput');
+  const usdOutput = document.getElementById('usdOutput');
+  const rateInfo = document.getElementById('rateInfo');
+  if(!eurInput) return;
+  const val = parseFloat(eurInput.value) || 0;
+  usdOutput.value = (val * eurRate).toFixed(2);
+  if(rateInfo) rateInfo.innerHTML = `1 EUR = <span>$${eurRate.toFixed(4)} USD</span>`;
+}
+
+function usdToEur() {
+  const eurInput = document.getElementById('eurInput');
+  const usdOutput = document.getElementById('usdOutput');
+  const val = parseFloat(usdOutput.value) || 0;
+  eurInput.value = (val / eurRate).toFixed(2);
+}
+
+function renderCurrency() {
+  const refs = [
+    {name:'Café con leche',eur:1.5},{name:'Menú del día (lunch)',eur:13},{name:'Cerveza/vino',eur:3},
+    {name:'Taxi (short ride)',eur:8},{name:'Metro ticket',eur:1.5},{name:'Museum entry',eur:15},
+    {name:'Tapas plate',eur:4},{name:'Dinner (per person)',eur:35},{name:'AVE to Segovia',eur:12},
+    {name:'Bocadillo sandwich',eur:4}
+  ];
+  let html = `<div class="card"><div class="sec-label">EUR ↔ USD Converter</div>
+    <div class="currency-row">
+      <input class="currency-input" id="eurInput" type="number" value="1" oninput="updateCurrency()">
+      <div class="currency-label" style="color:#d4a843;font-size:16px">€</div>
+      <div style="font-size:20px;color:#8a9980">=</div>
+      <input class="currency-input" id="usdOutput" type="number" value="${eurRate.toFixed(2)}" oninput="usdToEur()">
+      <div class="currency-label" style="color:#5599dd;font-size:16px">$</div>
+    </div>
+    <div class="rate-display" id="rateInfo">1 EUR = <span>$${eurRate.toFixed(4)} USD</span> · Live rate</div>
+    </div>
+    <div class="card"><div class="sec-label">Quick Reference</div>
+    <div class="ref-grid">`;
+  refs.forEach(r => {
+    html += `<div class="ref-item"><div class="ref-name">${r.name}</div><div class="ref-price">€${r.eur} = $${(r.eur*eurRate).toFixed(0)}</div></div>`;
+  });
+  html += '</div></div>';
+  document.getElementById('panel-currency').innerHTML = html;
+}
+
+function renderPlaces() {
+  const d = DAYS[currentDay];
+  const isMadrid = d.city === 'Madrid' || d.city === 'Segovia';
+  let html = '';
+
+  if(!isMadrid) {
+    html = `<div class="card"><div class="sec-label">Places Database</div>
+      <div class="tip-box">📍 Madrid places database available when you're in Madrid (Mar 24-28).<br><br>
+      For ${d.city}, use the AI Concierge tab to ask for specific recommendations!</div></div>`;
+  } else {
+    const types = [...new Set(MADRID_PLACES.map(p=>p.type))];
+    types.forEach(type => {
+      const places = MADRID_PLACES.filter(p=>p.type===type);
+      html += `<div class="card"><div class="sec-label">${type}</div>`;
+      places.forEach(p => {
+        html += `<div class="place-row">
+          <div class="place-icon">${p.icon}</div>
+          <div class="place-body">
+            <div class="place-name">${p.name}</div>
+            <div class="place-type">${p.type}</div>
+            <div class="place-note">${p.note}</div>
+            <div class="place-meta">
+              ${p.rating ? `<span class="stars">⭐ ${p.rating}</span>` : ''}
+              <span class="price-tag">${p.price}</span>
+              <a class="map-link" href="https://www.google.com/maps/search/${encodeURIComponent(p.name+' Madrid')}" target="_blank">📍 Map</a>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    });
+  }
+  document.getElementById('panel-places').innerHTML = html;
+}
+
+function renderConcierge() {
+  const d = DAYS[currentDay];
+  const quickQs = [
+    'Best tapas near my hotel tonight?',
+    `What time does ${d.city} come alive?`,
+    'Any BJJ gyms nearby for a drop-in?',
+    'Best souvenir shop recommendations?',
+    'Safest neighborhoods to walk at night?'
+  ];
+  let html = `<div class="quick-q">` +
+    quickQs.map(q=>`<button onclick="sendQuick('${q}')">${q}</button>`).join('') +
+    `</div>
+    <div class="chat-wrap" id="chatWrap">
+      <div class="chat-msg ai">¡Hola! I'm your Spain 2026 concierge. Currently helping with <strong>${d.name}</strong> in ${d.city}. Ask me anything — restaurants, directions, BJJ gyms, local tips! 🇪🇸</div>
+    </div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chatInput" rows="2" placeholder="Ask anything about your trip..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"></textarea>
+      <button class="chat-send" onclick="sendChat()">Send</button>
+    </div>`;
+  document.getElementById('panel-concierge').innerHTML = html;
+  chatHistory = [];
+}
+
+function sendQuick(q) {
+  document.getElementById('chatInput').value = q;
+  sendChat();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+
+  const d = DAYS[currentDay];
+  const wrap = document.getElementById('chatWrap');
+  wrap.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+  wrap.innerHTML += `<div class="chat-msg ai" id="aiTyping">⏳ Thinking...</div>`;
+  wrap.scrollTop = wrap.scrollHeight;
+
+  chatHistory.push({role:'user',content:msg});
+
+  const systemPrompt = `You are a concierge for a family Spain trip. Family: John (54, American/Spanish dual citizen, brown belt BJJ 10 yrs), wife Aymara, daughter Maria Elena. Currently: ${d.name} in ${d.city} on ${d.date}. Hotel: ${d.hotel}. Today's schedule: ${d.events.map(e=>e.title).join(', ')}. Be helpful, concise, specific. You speak English and Spanish. Add occasional Spanish phrases where natural.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:600,
+        system: systemPrompt,
+        tools:[{type:'web_search_20250305',name:'web_search'}],
+        messages: chatHistory
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n') || 'Lo siento, try again.';
+    chatHistory.push({role:'assistant',content:text});
+    document.getElementById('aiTyping').textContent = text;
+    wrap.scrollTop = wrap.scrollHeight;
+  } catch(e) {
+    document.getElementById('aiTyping').textContent = 'Connection error — check your internet and try again.';
+  }
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+
+  if(name==='picks') loadPicks();
+  if(name==='alerts') loadAlerts();
+  if(name==='currency') renderCurrency();
+  if(name==='places') renderPlaces();
+  if(name==='concierge') renderConcierge();
+  if(name==='reminders') renderReminders();
+}
+
+init();
+</script>
+</body>
+</html>
