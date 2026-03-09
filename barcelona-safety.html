@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Barcelona Safety Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --dark:#0f1318;
+  --card:#151c24;
+  --border:rgba(212,168,67,0.15);
+  --gold:#d4a843;
+  --red:#c0392b;
+  --orange:#e67e22;
+  --green:#27ae60;
+  --text:#e8d5b0;
+  --dim:#8a9980;
+}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.header{padding:14px 16px 10px;background:linear-gradient(135deg,#0f1318,#1a2030);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.header-left .sup{font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase}
+.header-left .title{font-family:'Playfair Display',serif;font-size:18px;color:#f5e6c8}
+.back-link{font-size:10px;color:var(--dim);text-decoration:none;letter-spacing:1px;padding:5px 10px;border:1px solid var(--border);border-radius:10px}
+.back-link:hover{color:var(--gold);border-color:rgba(212,168,67,0.3)}
+#map{flex:1;min-height:0;height:calc(100vh - 180px)}
+.status-bar{padding:10px 14px;background:var(--card);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.status-pill{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid transparent}
+.status-pill.safe{background:rgba(39,174,96,0.1);border-color:rgba(39,174,96,0.25);color:#5dbb7a}
+.status-pill.warning{background:rgba(230,126,34,0.1);border-color:rgba(230,126,34,0.25);color:#f39c12}
+.status-pill.danger{background:rgba(192,57,43,0.15);border-color:rgba(192,57,43,0.35);color:#e74c3c;animation:pulse-danger 1.5s infinite}
+.status-pill.tracking{background:rgba(212,168,67,0.1);border-color:rgba(212,168,67,0.25);color:var(--gold)}
+.status-pill.off{background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.08);color:var(--dim)}
+@keyframes pulse-danger{0%,100%{box-shadow:0 0 0 0 rgba(192,57,43,0.4)}50%{box-shadow:0 0 0 8px rgba(192,57,43,0)}}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+.dot.pulse{animation:dot-pulse 1.5s infinite}
+@keyframes dot-pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.track-btn{margin-left:auto;padding:7px 16px;border-radius:20px;border:none;font-size:11px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;transition:all 0.2s}
+.track-btn.start{background:var(--gold);color:#0f1318}
+.track-btn.stop{background:rgba(192,57,43,0.2);border:1px solid rgba(192,57,43,0.3);color:#e74c3c}
+.legend{padding:10px 14px;background:var(--card);border-top:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.alert-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(192,57,43,0.95);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;animation:alert-in 0.3s ease}
+@keyframes alert-in{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+.alert-overlay.show{display:flex}
+.alert-icon{font-size:64px;margin-bottom:16px;animation:shake 0.5s ease infinite alternate}
+@keyframes shake{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+.alert-title{font-family:'Playfair Display',serif;font-size:28px;color:#fff;margin-bottom:8px}
+.alert-sub{font-size:14px;color:rgba(255,255,255,0.85);line-height:1.6;max-width:300px;margin-bottom:24px}
+.alert-zone{font-size:12px;color:rgba(255,255,255,0.7);font-family:'IBM Plex Mono',monospace;background:rgba(0,0,0,0.2);padding:6px 14px;border-radius:10px;margin-bottom:20px}
+.alert-dismiss{padding:12px 28px;background:#fff;color:var(--red);border:none;border-radius:20px;font-size:14px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;cursor:pointer}
+.alert-call{display:flex;gap:10px;margin-bottom:16px}
+.call-btn{padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;text-decoration:none;display:inline-block}
+.call-btn.emergency{background:#fff;color:var(--red)}
+.call-btn.embassy{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="sup">Barcelona · Safety</div>
+    <div class="title">🗺️ Danger Zone Map</div>
+  </div>
+  <a href="/" class="back-link">← Dashboard</a>
+</div>
+
+<div id="map"></div>
+
+<div class="status-bar">
+  <div class="status-pill off" id="statusPill">
+    <div class="dot" id="statusDot"></div>
+    <span id="statusText">GPS tracking off</span>
+  </div>
+  <button class="track-btn start" id="trackBtn" onclick="toggleTracking()">📍 Start Tracking</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(192,57,43,0.7)"></div> High Risk Street</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(230,126,34,0.5)"></div> Caution Micro-Zone</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(212,168,67,0.4)"></div> Tourist Caution</div>
+  <div class="legend-item"><div class="legend-dot" style="background:rgba(52,152,219,0.5)"></div> Your Hotel</div>
+</div>
+
+<!-- Alert Overlay -->
+<div class="alert-overlay" id="alertOverlay">
+  <div class="alert-icon">🚨</div>
+  <div class="alert-title">Danger Zone Alert!</div>
+  <div class="alert-sub">You are entering or near a high-risk area in Barcelona. Stay aware of your surroundings and keep valuables secure.</div>
+  <div class="alert-zone" id="alertZoneName">El Raval — High Risk Area</div>
+  <div class="alert-call">
+    <a class="call-btn emergency" href="tel:112">📞 Call 112</a>
+    <a class="call-btn embassy" href="tel:+34932802227">🏛️ US Consulate</a>
+  </div>
+  <button class="alert-dismiss" onclick="dismissAlert()">Got It — Stay Alert</button>
+</div>
+
+<script>
+// ── DANGER ZONES ──────────────────────────────────────────────
+const ZONES = [
+  {
+    name: "El Raval — Carrer d'En Robador",
+    level: 'high',
+    color: 'rgba(192,57,43,0.55)',
+    outline: '#c0392b',
+    coords: [
+      [41.3800, 2.1680],[41.3810, 2.1685],[41.3815, 2.1675],
+      [41.3808, 2.1665],[41.3798, 2.1668]
+    ]
+  },
+  {
+    name: "El Raval — Carrer de l'Hospital (inner)",
+    level: 'high',
+    color: 'rgba(192,57,43,0.5)',
+    outline: '#c0392b',
+    coords: [
+      [41.3795, 2.1665],[41.3805, 2.1670],[41.3808, 2.1655],
+      [41.3798, 2.1648],[41.3790, 2.1652]
+    ]
+  },
+  {
+    name: "El Raval — Carrer de Sant Pau (lower)",
+    level: 'high',
+    color: 'rgba(192,57,43,0.5)',
+    outline: '#c0392b',
+    coords: [
+      [41.3785, 2.1670],[41.3792, 2.1678],[41.3797, 2.1668],
+      [41.3790, 2.1658],[41.3782, 2.1663]
+    ]
+  },
+  {
+    name: "El Raval — Arc de Sant Agustí",
+    level: 'high',
+    color: 'rgba(192,57,43,0.5)',
+    outline: '#c0392b',
+    coords: [
+      [41.3802, 2.1655],[41.3808, 2.1660],[41.3812, 2.1650],
+      [41.3806, 2.1643],[41.3800, 2.1648]
+    ]
+  },
+  {
+    name: "Micro-zone — Sant Pau del Camp area",
+    level: 'medium',
+    color: 'rgba(230,126,34,0.4)',
+    outline: '#e67e22',
+    coords: [
+      [41.3778, 2.1655],[41.3788, 2.1672],[41.3795, 2.1665],
+      [41.3790, 2.1648],[41.3778, 2.1645]
+    ]
+  },
+  {
+    name: "Micro-zone — Inner Raval (La Rambla to Rambla del Raval)",
+    level: 'medium',
+    color: 'rgba(230,126,34,0.35)',
+    outline: '#e67e22',
+    coords: [
+      [41.3800, 2.1640],[41.3820, 2.1660],[41.3825, 2.1700],
+      [41.3815, 2.1710],[41.3795, 2.1695],[41.3790, 2.1650]
+    ]
+  },
+  {
+    name: "Micro-zone — Ronda de Sant Antoni (NE Raval)",
+    level: 'medium',
+    color: 'rgba(230,126,34,0.35)',
+    outline: '#e67e22',
+    coords: [
+      [41.3822, 2.1655],[41.3830, 2.1665],[41.3835, 2.1650],
+      [41.3828, 2.1640],[41.3820, 2.1645]
+    ]
+  },
+  {
+    name: "Las Ramblas — Pickpocket Zone",
+    level: 'caution',
+    color: 'rgba(212,168,67,0.3)',
+    outline: '#d4a843',
+    coords: [
+      [41.3750, 2.1730],[41.3760, 2.1738],[41.3840, 2.1710],
+      [41.3838, 2.1698],[41.3748, 2.1720]
+    ]
+  },
+  {
+    name: "Gothic Quarter — Night Caution",
+    level: 'caution',
+    color: 'rgba(212,168,67,0.2)',
+    outline: '#d4a843',
+    coords: [
+      [41.3810, 2.1738],[41.3840, 2.1760],[41.3845, 2.1745],
+      [41.3830, 2.1720],[41.3808, 2.1725]
+    ]
+  }
+];
+
+// Hotel HCC St. Moritz
+const HOTEL = [41.3909, 2.1542];
+const ALERT_RADIUS_METERS = 120;
+
+// ── MAP INIT ──────────────────────────────────────────────────
+const map = L.map('map', {zoomControl: true}).setView([41.3820, 2.1680], 15);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap © CARTO',
+  maxZoom: 19
+}).addTo(map);
+
+// Draw zones
+ZONES.forEach(zone => {
+  L.polygon(zone.coords, {
+    color: zone.outline,
+    weight: 2,
+    fillColor: zone.color,
+    fillOpacity: 1,
+    dashArray: zone.level === 'caution' ? '6,4' : null
+  }).addTo(map).bindPopup(`
+    <div style="font-family:'IBM Plex Sans',sans-serif;padding:4px">
+      <div style="font-weight:600;color:${zone.level==='high'?'#e74c3c':zone.level==='medium'?'#e67e22':'#d4a843'};font-size:12px;margin-bottom:4px">
+        ${zone.level==='high'?'⚠️ HIGH RISK':zone.level==='medium'?'🟡 CAUTION ZONE':'⚡ TOURIST CAUTION'}
+      </div>
+      <div style="font-size:13px;font-weight:500">${zone.name}</div>
+      <div style="font-size:11px;color:#999;margin-top:4px">Stay alert · Keep valuables secure</div>
+    </div>
+  `);
+});
+
+// Hotel marker
+const hotelIcon = L.divIcon({
+  html: `<div style="background:#1a6bbf;border:2px solid #5599dd;border-radius:50%;width:14px;height:14px;box-shadow:0 0 10px rgba(85,153,221,0.6)"></div>`,
+  iconSize:[14,14], iconAnchor:[7,7]
+});
+L.marker(HOTEL, {icon: hotelIcon}).addTo(map)
+  .bindPopup('<div style="font-family:IBM Plex Sans,sans-serif;font-size:13px;font-weight:600">🏨 HCC St. Moritz<br><span style="font-size:11px;color:#999;font-weight:400">Your hotel · Safe neighborhood</span></div>');
+
+// ── TRACKING ──────────────────────────────────────────────────
+let tracking = false;
+let watchId = null;
+let userMarker = null;
+let alertActive = false;
+let lastAlertZone = null;
+let alertCooldown = false;
+
+function haversineMeters(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function pointInPolygon(lat, lng, coords) {
+  let inside = false;
+  for(let i=0, j=coords.length-1; i<coords.length; j=i++) {
+    const xi=coords[i][0], yi=coords[i][1];
+    const xj=coords[j][0], yj=coords[j][1];
+    if(((yi>lng)!==(yj>lng)) && (lat<(xj-xi)*(lng-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+
+function checkZones(lat, lng) {
+  for(const zone of ZONES) {
+    if(zone.level === 'caution') continue; // only alert on high/medium
+    // Check if inside polygon
+    if(pointInPolygon(lat, lng, zone.coords)) return zone;
+    // Check proximity (within ALERT_RADIUS_METERS of zone centroid)
+    const centLat = zone.coords.reduce((s,c)=>s+c[0],0)/zone.coords.length;
+    const centLng = zone.coords.reduce((s,c)=>s+c[1],0)/zone.coords.length;
+    const dist = haversineMeters(lat, lng, centLat, centLng);
+    if(dist < ALERT_RADIUS_METERS) return zone;
+  }
+  return null;
+}
+
+function updateStatus(state, text) {
+  const pill = document.getElementById('statusPill');
+  const dot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  pill.className = 'status-pill ' + state;
+  dot.className = 'dot' + (state==='tracking'||state==='danger'?' pulse':'');
+  statusText.textContent = text;
+}
+
+function toggleTracking() {
+  if(!tracking) {
+    if(!navigator.geolocation) {
+      alert('Geolocation not supported on this device.');
+      return;
+    }
+    tracking = true;
+    document.getElementById('trackBtn').className = 'track-btn stop';
+    document.getElementById('trackBtn').textContent = '⏹ Stop Tracking';
+    updateStatus('tracking', 'Acquiring GPS...');
+
+    watchId = navigator.geolocation.watchPosition(onPosition, onError, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 10000
+    });
+  } else {
+    stopTracking();
+  }
+}
+
+function stopTracking() {
+  tracking = false;
+  if(watchId) navigator.geolocation.clearWatch(watchId);
+  if(userMarker) { map.removeLayer(userMarker); userMarker = null; }
+  document.getElementById('trackBtn').className = 'track-btn start';
+  document.getElementById('trackBtn').textContent = '📍 Start Tracking';
+  updateStatus('off', 'GPS tracking off');
+}
+
+function onPosition(pos) {
+  const lat = pos.coords.latitude;
+  const lng = pos.coords.longitude;
+  const acc = Math.round(pos.coords.accuracy);
+
+  // Update marker
+  const userIcon = L.divIcon({
+    html: `<div style="background:#d4a843;border:2px solid #fff;border-radius:50%;width:16px;height:16px;box-shadow:0 0 12px rgba(212,168,67,0.8)"></div>`,
+    iconSize:[16,16], iconAnchor:[8,8]
+  });
+  if(userMarker) map.removeLayer(userMarker);
+  userMarker = L.marker([lat,lng], {icon: userIcon}).addTo(map)
+    .bindPopup(`<div style="font-family:IBM Plex Sans,sans-serif;font-size:12px">📍 You are here<br><span style="color:#999">±${acc}m accuracy</span></div>`);
+
+  // Check danger zones
+  const dangerZone = checkZones(lat, lng);
+  if(dangerZone && !alertCooldown) {
+    if(dangerZone.name !== lastAlertZone) {
+      lastAlertZone = dangerZone.name;
+      triggerAlert(dangerZone);
+    }
+  } else if(!dangerZone) {
+    lastAlertZone = null;
+    updateStatus('safe', `✅ You're in a safe area · ±${acc}m`);
+  }
+}
+
+function onError(err) {
+  updateStatus('off', 'GPS error: ' + err.message);
+}
+
+function triggerAlert(zone) {
+  alertCooldown = true;
+  updateStatus('danger', '🚨 DANGER ZONE DETECTED');
+  document.getElementById('alertZoneName').textContent = zone.name;
+  document.getElementById('alertOverlay').classList.add('show');
+
+  // Vibrate if supported
+  if(navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+
+  // Play audio alert
+  try {
+    const ctx = new(window.AudioContext||window.webkitAudioContext)();
+    [440,550,440,550,440].forEach((freq,i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'square';
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + i*0.2);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.2 + 0.18);
+      osc.start(ctx.currentTime + i*0.2);
+      osc.stop(ctx.currentTime + i*0.2 + 0.2);
+    });
+  } catch(e) {}
+}
+
+function dismissAlert() {
+  document.getElementById('alertOverlay').classList.remove('show');
+  alertActive = false;
+  updateStatus('tracking', '⚠️ Caution — Stay alert in this area');
+  // Cooldown 60 seconds before next alert for same zone
+  setTimeout(() => { alertCooldown = false; }, 60000);
+}
+</script>
+</body>
+</html>
