@@ -11,6 +11,7 @@ export default defineConfig({
         { src: 'dashboard.html', dest: '.' },
         { src: 'barcelona-map.html', dest: '.' },
         { src: 'barcelona-weather.html', dest: '.' },
+        { src: 'barcelona-safety.html', dest: '.' },
         { src: 'madrid-weather.html', dest: '.' },
         { src: 'zaragoza-map.html', dest: '.' },
         { src: 'zaragoza-weather.html', dest: '.' },
