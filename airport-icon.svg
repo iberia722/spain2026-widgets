@@ -1,0 +1,51 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <g fill="#1a1a1a">
+    <!-- Antenna -->
+    <rect x="30" y="8" width="4" height="6"/>
+    <circle cx="32" cy="7" r="2"/>
+    
+    <!-- Control tower top -->
+    <rect x="26" y="14" width="12" height="4" rx="1"/>
+    
+    <!-- Tower body (tapered) -->
+    <path d="M24,18 L40,18 L38,38 L26,38 Z"/>
+    
+    <!-- Tower windows -->
+    <rect x="28" y="22" width="3" height="3" fill="#fff" opacity="0.3"/>
+    <rect x="33" y="22" width="3" height="3" fill="#fff" opacity="0.3"/>
+    <rect x="28" y="28" width="3" height="3" fill="#fff" opacity="0.3"/>
+    <rect x="33" y="28" width="3" height="3" fill="#fff" opacity="0.3"/>
+    
+    <!-- Tower base -->
+    <rect x="28" y="38" width="8" height="8"/>
+    
+    <!-- Terminal building -->
+    <rect x="14" y="46" width="36" height="8" rx="1"/>
+    
+    <!-- Foundation -->
+    <rect x="10" y="54" width="44" height="3" rx="1"/>
+    
+    <!-- Runway markers -->
+    <circle cx="16" cy="60" r="1.2"/>
+    <circle cx="20" cy="60" r="1.2"/>
+    <circle cx="24" cy="60" r="1.2"/>
+    <circle cx="28" cy="60" r="1.2"/>
+    <circle cx="32" cy="60" r="1.2"/>
+    <circle cx="36" cy="60" r="1.2"/>
+    <circle cx="40" cy="60" r="1.2"/>
+    <circle cx="44" cy="60" r="1.2"/>
+    <circle cx="48" cy="60" r="1.2"/>
+    
+    <!-- Left plane -->
+    <g opacity="0.8">
+      <path d="M12,20 L18,22 L16,24 L10,22 Z"/>
+      <ellipse cx="14" cy="22" rx="1" ry="0.5"/>
+    </g>
+    
+    <!-- Right plane -->
+    <g opacity="0.8">
+      <path d="M46,16 L52,18 L54,20 L48,18 Z"/>
+      <ellipse cx="50" cy="18" rx="1" ry="0.5"/>
+    </g>
+  </g>
+</svg>
