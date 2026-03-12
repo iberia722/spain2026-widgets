@@ -448,13 +448,15 @@ function shouldAutoRefresh() {
   );
 }
 
-// Initialize
-refreshAll();
-
-// Auto-refresh every 15 minutes if within 24 hours of departure
-if (shouldAutoRefresh()) {
-  setInterval(refreshAll, 15 * 60 * 1000);
-}
+// Initialize when DOM is ready
+window.addEventListener('DOMContentLoaded', function() {
+  refreshAll();
+  
+  // Auto-refresh every 15 minutes if within 24 hours of departure
+  if (shouldAutoRefresh()) {
+    setInterval(refreshAll, 15 * 60 * 1000);
+  }
+});
 </script>
 </body>
 </html>
