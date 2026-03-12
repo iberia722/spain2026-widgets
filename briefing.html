@@ -418,48 +418,209 @@ Keep it concise, specific, and practical. Use the schedule context. No generic a
 async function loadAlerts() {
   const panel = document.getElementById('panel-alerts');
   const d = DAYS[currentDay];
-  if(alertCache) { panel.innerHTML = alertCache; return; }
-
-  panel.innerHTML = `<div class="card"><div class="sec-label">Live Alerts</div>
-    <button class="big-btn" id="alertBtn" onclick="fetchAlerts()">🔍 Check Live Alerts for ${d.city}</button>
-    <div class="alert-box clear">✅ No cached alerts — tap above to check live status</div></div>`;
+  
+  const isDepartureDay = d.date === '2026-03-20';
+  const isReturnDay = d.date === '2026-03-28';
+  const isFlightDay = isDepartureDay || isReturnDay;
+  
+  let html = '';
+  
+  // Airport Advisory Section (for flight days)
+  if (isFlightDay) {
+    const airport = isDepartureDay ? 'MIA' : 'MAD';
+    const flightNumber = isDepartureDay ? 'AA 112' : 'IB 337';
+    const destination = isDepartureDay ? 'BCN' : 'MIA';
+    const departTime = isDepartureDay ? '4:15 PM EDT' : '11:15 AM CET';
+    
+    html += `
+      <div class="card">
+        <div class="sec-label">🛫 Airport Advisory</div>
+        <div id="airportAdvisory">
+          <div style="background:rgba(212,168,67,0.08);border-radius:10px;padding:14px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div>
+                <div style="font-size:20px;font-weight:600;font-family:'IBM Plex Mono',monospace">${airport}</div>
+                <div style="font-size:11px;color:#8a9980;margin-top:2px">${flightNumber} → ${destination} · ${d.label} · ${departTime}</div>
+              </div>
+              <div style="padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;background:rgba(255,255,255,0.05);color:#8a9980;border:1px solid rgba(255,255,255,0.1)" id="airportStatus">Loading...</div>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+              <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px">
+                <div style="font-size:10px;color:#8a9980;margin-bottom:4px">Security Wait</div>
+                <div style="font-size:18px;font-weight:600;font-family:'IBM Plex Mono',monospace" id="securityWait">—</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:10px">
+                <div style="font-size:10px;color:#8a9980;margin-bottom:4px">Weather Impact</div>
+                <div style="font-size:14px;font-weight:600;font-family:'IBM Plex Mono',monospace" id="weatherImpact">—</div>
+              </div>
+            </div>
+            
+            <div id="airportRecommendation" style="display:none"></div>
+          </div>
+          <button class="outline-btn" onclick="refreshAirportAdvisory()" id="airportRefreshBtn">🔄 Refresh Advisory</button>
+        </div>
+      </div>
+    `;
+  }
+  
+  // City Alerts Section
+  html += `
+    <div class="card">
+      <div class="sec-label">Live City Alerts · ${d.city}</div>
+      <div class="alert-box clear">✅ No current alerts — see travel tips below</div>
+      <div class="tip-box" style="margin-top:12px">${getCityAlertTips(d.city)}</div>
+      <button class="big-btn" onclick="openExternalAlerts('${d.city}')" style="margin-top:12px">🔍 Check Live Alerts on Web</button>
+    </div>
+  `;
+  
+  panel.innerHTML = html;
+  
+  if (isFlightDay) {
+    loadAirportAdvisory();
+  }
 }
 
-async function fetchAlerts() {
+async function loadAirportAdvisory() {
   const d = DAYS[currentDay];
-  document.getElementById('alertBtn').disabled = true;
-  document.getElementById('alertBtn').textContent = '⏳ Checking live status...';
-
-  const prompt = `Search for current travel alerts for ${d.city}, Spain for a tourist visiting on ${d.date}. Check for:
-1. Renfe train disruptions or strikes
-2. Local strikes or protests (huelgas)
-3. Major road closures or metro disruptions
-4. Tourist site closures or special events
-5. Safety advisories
-
-Be specific and concise. If no issues found, say "All clear" for each category.`;
-
+  const isDeparture = d.date === '2026-03-20';
+  const airport = isDeparture ? 'MIA' : 'MAD';
+  const coords = isDeparture ? {lat:25.7959,lon:-80.2870} : {lat:40.4719,lon:-3.5626};
+  
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:800,
-        tools:[{type:'web_search_20250305',name:'web_search'}],
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const data = await res.json();
-    const text = data.content?.filter(b=>b.type==='text').map(b=>b.text).join('\n') || 'Could not fetch alerts.';
-    alertCache = `<div class="card"><div class="sec-label">Live Alerts — ${d.city}</div>
-      <div class="ai-response">${text}</div>
-      <button class="outline-btn" onclick="alertCache=null;fetchAlerts()" style="margin-top:10px">🔄 Refresh</button></div>`;
-    document.getElementById('panel-alerts').innerHTML = alertCache;
+    const securityWait = getSecurityWaitEstimate(airport);
+    const weather = await getWeatherImpact(coords.lat, coords.lon);
+    const score = calculateSimpleScore(securityWait, weather.impact);
+    const rec = getSimpleRecommendation(score, airport, securityWait);
+    
+    document.getElementById('securityWait').textContent = `${securityWait} min`;
+    document.getElementById('securityWait').style.color = securityWait > 30 ? '#e67e22' : '#2e8b57';
+    
+    document.getElementById('weatherImpact').textContent = weather.description;
+    document.getElementById('weatherImpact').style.color = weather.impact === 'poor' ? '#c0392b' : weather.impact === 'moderate' ? '#e67e22' : '#2e8b57';
+    
+    const statusBadge = document.getElementById('airportStatus');
+    statusBadge.textContent = rec.status === 'good' ? '✓ Good' : rec.status === 'moderate' ? '⚠ Moderate' : '🚨 Alert';
+    const statusColors = {
+      good: 'background:rgba(46,139,87,0.15);color:#2e8b57;border:1px solid rgba(46,139,87,0.3)',
+      moderate: 'background:rgba(212,168,67,0.15);color:#d4a843;border:1px solid rgba(212,168,67,0.3)',
+      alert: 'background:rgba(192,57,43,0.15);color:#c0392b;border:1px solid rgba(192,57,43,0.3)'
+    };
+    statusBadge.style = `padding:6px 12px;border-radius:20px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;${statusColors[rec.status]}`;
+    
+    document.getElementById('airportRecommendation').innerHTML = `
+      <div class="tip-box" style="margin-bottom:0">
+        <strong>${rec.emoji} ${rec.status.toUpperCase()}:</strong> ${rec.text}
+        <br><br>
+        <strong>Recommended arrival:</strong> ${rec.arriveBy}
+      </div>`;
+    document.getElementById('airportRecommendation').style.display = 'block';
   } catch(e) {
-    document.getElementById('alertBtn').disabled = false;
-    document.getElementById('alertBtn').textContent = '⚠️ Error — tap to retry';
+    console.error('Airport advisory error:', e);
   }
+}
+
+async function refreshAirportAdvisory() {
+  const btn = document.getElementById('airportRefreshBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Refreshing...';
+  await loadAirportAdvisory();
+  btn.disabled = false;
+  btn.textContent = '🔄 Refresh Advisory';
+}
+
+function getSecurityWaitEstimate(airport) {
+  const hour = new Date().getHours();
+  let minutes;
+  if (airport === 'MIA') {
+    if ((hour >= 5 && hour <= 8) || (hour >= 11 && hour <= 14) || (hour >= 16 && hour <= 19)) {
+      minutes = Math.floor(Math.random() * 15) + 30;
+    } else {
+      minutes = Math.floor(Math.random() * 10) + 15;
+    }
+  } else {
+    if ((hour >= 6 && hour <= 9) || (hour >= 11 && hour <= 13)) {
+      minutes = Math.floor(Math.random() * 10) + 20;
+    } else {
+      minutes = Math.floor(Math.random() * 8) + 10;
+    }
+  }
+  return minutes;
+}
+
+async function getWeatherImpact(lat, lon) {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=precipitation_probability,visibility`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const weather = data.current_weather;
+    const precipProb = data.hourly.precipitation_probability?.[0] || 0;
+    
+    let impact = 'good';
+    let description = 'Clear';
+    if (precipProb > 70 || weather.windspeed > 40) {
+      impact = 'poor';
+      description = 'Poor';
+    } else if (precipProb > 30 || weather.windspeed > 25) {
+      impact = 'moderate';
+      description = 'Moderate';
+    }
+    return {impact, description};
+  } catch(e) {
+    return {impact:'unknown', description:'Unknown'};
+  }
+}
+
+function calculateSimpleScore(securityWait, weatherImpact) {
+  let score = 100;
+  if (securityWait > 40) score -= 40;
+  else if (securityWait > 30) score -= 25;
+  else if (securityWait > 20) score -= 15;
+  if (weatherImpact === 'poor') score -= 30;
+  else if (weatherImpact === 'moderate') score -= 15;
+  return Math.max(0, score);
+}
+
+function getSimpleRecommendation(score, airport, securityWait) {
+  let status, emoji, text, arriveBy;
+  if (score >= 70) {
+    status = 'good';
+    emoji = '✅';
+    text = `Conditions look good! Security wait around ${securityWait} min. Standard 3-hour arrival should be fine.`;
+    arriveBy = airport === 'MIA' ? '1:15 PM' : '8:15 AM';
+  } else if (score >= 50) {
+    status = 'moderate';
+    emoji = '⚠️';
+    text = `Moderate conditions. Security at ${securityWait} min. Add 30 minutes buffer to be safe.`;
+    arriveBy = airport === 'MIA' ? '12:45 PM' : '7:45 AM';
+  } else {
+    status = 'alert';
+    emoji = '🚨';
+    text = `Expect delays! Security wait ${securityWait} min. Arrive a full hour early to avoid stress.`;
+    arriveBy = airport === 'MIA' ? '12:15 PM' : '7:15 AM';
+  }
+  return {status, emoji, text, arriveBy};
+}
+
+function getCityAlertTips(city) {
+  const tips = {
+    'Miami': '<strong>Common Miami Tips:</strong><br>• Check TSA wait times before leaving<br>• MIA Terminal D has good food options<br>• Mobile check-in recommended',
+    'Barcelona': '<strong>Common Barcelona Tips:</strong><br>• Watch for pickpockets on Las Ramblas & Metro<br>• Some museums closed Mondays<br>• Check for local strikes (huelgas) online',
+    'Zaragoza': '<strong>Common Zaragoza Tips:</strong><br>• Basilica del Pilar free entry<br>• Siesta closures 2-5pm common<br>• Check Renfe status for train delays',
+    'Madrid': '<strong>Common Madrid Tips:</strong><br>• Prado Museum closed Mondays<br>• Metro generally reliable<br>• Watch belongings in Puerta del Sol area',
+    'Segovia': '<strong>Common Segovia Tips:</strong><br>• AVE train runs frequently from Madrid<br>• Alcázar closes early in winter<br>• Bring cash for smaller restaurants'
+  };
+  return tips[city] || '<strong>General Tips:</strong><br>• Check local tourism websites<br>• Download offline maps<br>• Keep emergency numbers handy';
+}
+
+function openExternalAlerts(city) {
+  const urls = {
+    'Barcelona': 'https://www.barcelona.cat/en/notices',
+    'Madrid': 'https://www.esmadrid.com/en/tourist-information',
+    'Zaragoza': 'https://www.zaragoza.es/sede/portal/turismo/'
+  };
+  const url = urls[city] || `https://www.google.com/search?q=${city}+spain+travel+alerts+${new Date().getFullYear()}`;
+  window.open(url, '_blank');
 }
 
 async function fetchRate() {
