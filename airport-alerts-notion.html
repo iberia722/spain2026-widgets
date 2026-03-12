@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛫 Airport Alerts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap');
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .container {
+    max-width: 100%;
+    padding: 16px;
+  }
+  
+  .alert-card {
+    background: linear-gradient(135deg, #fff3cd 0%, #fef5e7 100%);
+    border: 2px solid #f9e79f;
+    border-radius: 12px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: block;
+    box-shadow: 0 2px 8px rgba(212, 168, 67, 0.1);
+  }
+  
+  .alert-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212, 168, 67, 0.25);
+    border-color: #d4a843;
+  }
+  
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .airport-icon {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+  
+  .header-text {
+    flex: 1;
+  }
+  
+  .title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #856404;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .live-badge {
+    background: #856404;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  .subtitle {
+    font-size: 12px;
+    color: #856404;
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+  
+  .features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .feature {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(212, 168, 67, 0.2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: #856404;
+    font-weight: 500;
+  }
+  
+  .feature-icon {
+    margin-right: 4px;
+  }
+  
+  .cta {
+    text-align: center;
+    background: #856404;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  
+  .alert-card:hover .cta {
+    background: #6b5003;
+  }
+  
+  .emergency-info {
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+    border-left: 3px solid #e67e22;
+  }
+  
+  .emergency-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #856404;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  
+  .emergency-item {
+    font-size: 12px;
+    color: #856404;
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+  
+  .emergency-item:last-child {
+    margin-bottom: 0;
+  }
+  
+  .emergency-label {
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <a href="airport-advisory.html" class="alert-card" target="_blank">
+      <div class="card-header">
+        <!-- Airport Control Tower Icon -->
+        <svg class="airport-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <g fill="#856404">
+            <!-- Antenna -->
+            <rect x="30" y="8" width="4" height="6"/>
+            <circle cx="32" cy="7" r="2"/>
+            
+            <!-- Control tower -->
+            <rect x="26" y="14" width="12" height="4" rx="1"/>
+            <path d="M24,18 L40,18 L38,38 L26,38 Z"/>
+            <rect x="28" y="38" width="8" height="8"/>
+            
+            <!-- Windows -->
+            <rect x="28" y="22" width="3" height="3" fill="#fff3cd"/>
+            <rect x="33" y="22" width="3" height="3" fill="#fff3cd"/>
+            <rect x="28" y="28" width="3" height="3" fill="#fff3cd"/>
+            <rect x="33" y="28" width="3" height="3" fill="#fff3cd"/>
+            
+            <!-- Base -->
+            <rect x="14" y="46" width="36" height="8" rx="1"/>
+            <rect x="10" y="54" width="44" height="3" rx="1"/>
+            
+            <!-- Runway markers -->
+            <circle cx="16" cy="60" r="1.2"/>
+            <circle cx="20" cy="60" r="1.2"/>
+            <circle cx="24" cy="60" r="1.2"/>
+            <circle cx="28" cy="60" r="1.2"/>
+            <circle cx="32" cy="60" r="1.2"/>
+            <circle cx="36" cy="60" r="1.2"/>
+            <circle cx="40" cy="60" r="1.2"/>
+            <circle cx="44" cy="60" r="1.2"/>
+            <circle cx="48" cy="60" r="1.2"/>
+            
+            <!-- Planes -->
+            <g opacity="0.8">
+              <path d="M12,20 L18,22 L16,24 L10,22 Z"/>
+              <ellipse cx="14" cy="22" rx="1" ry="0.5"/>
+            </g>
+            <g opacity="0.8">
+              <path d="M46,16 L52,18 L54,20 L48,18 Z"/>
+              <ellipse cx="50" cy="18" rx="1" ry="0.5"/>
+            </g>
+          </g>
+        </svg>
+        
+        <div class="header-text">
+          <div class="title">
+            Airport Alerts
+            <span class="live-badge">LIVE</span>
+          </div>
+          <div class="subtitle">Real-time delay monitoring</div>
+        </div>
+      </div>
+      
+      <div class="features">
+        <div class="feature">
+          <span class="feature-icon">⏱️</span>
+          Security Wait Times
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🌤️</span>
+          Weather Impact
+        </div>
+        <div class="feature">
+          <span class="feature-icon">✈️</span>
+          Flight Delays
+        </div>
+        <div class="feature">
+          <span class="feature-icon">🎯</span>
+          Smart Arrival Time
+        </div>
+      </div>
+      
+      <div class="cta">
+        CHECK MIA & MAD STATUS →
+      </div>
+    </a>
+    
+    <div class="emergency-info">
+      <div class="emergency-title">📞 Emergency Contact</div>
+      <div class="emergency-item">
+        <span class="emergency-label">Spain:</span> 112 · US Embassy Madrid: +34 91 587 2200
+      </div>
+      <div class="emergency-item">
+        <span class="emergency-label">US:</span> US Embassy Barcelona (Consulate): +34 93 280 2227
+      </div>
+    </div>
+  </div>
+</body>
+</html>
