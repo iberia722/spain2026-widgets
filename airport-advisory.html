@@ -363,15 +363,24 @@ async function updateAirport(airportCode) {
     getFlightDelays(airportCode)
   ]);
   
-  // Update metrics
-  document.getElementById(`${prefix}TSA`).textContent = `${tsaData.minutes} min`;
-  document.getElementById(`${prefix}TSA`).className = `metric-value ${tsaData.minutes > 30 ? 'warn' : 'good'}`;
+  // Update metrics (iOS Safari compatible - no template literals in getElementById)
+  const tsaEl = document.getElementById(prefix + 'TSA');
+  const delaysEl = document.getElementById(prefix + 'Delays');
+  const weatherEl = document.getElementById(prefix + 'Weather');
+  const scoreEl = document.getElementById(prefix + 'Score');
+  const statusEl = document.getElementById(prefix + 'Status');
+  const recEl = document.getElementById(prefix + 'Rec');
+  const recTextEl = document.getElementById(prefix + 'RecText');
+  const sourcesEl = document.getElementById(prefix + 'Sources');
   
-  document.getElementById(`${prefix}Delays`).textContent = `${delayData.avgDelay} min avg`;
-  document.getElementById(`${prefix}Delays`).className = `metric-value ${delayData.avgDelay > 20 ? 'bad' : delayData.avgDelay > 10 ? 'warn' : 'good'}`;
+  tsaEl.textContent = tsaData.minutes + ' min';
+  tsaEl.className = 'metric-value ' + (tsaData.minutes > 30 ? 'warn' : 'good');
   
-  document.getElementById(`${prefix}Weather`).textContent = weatherData.description;
-  document.getElementById(`${prefix}Weather`).className = `metric-value ${weatherData.impact === 'severe' ? 'bad' : weatherData.impact === 'moderate' ? 'warn' : 'good'}`;
+  delaysEl.textContent = delayData.avgDelay + ' min avg';
+  delaysEl.className = 'metric-value ' + (delayData.avgDelay > 20 ? 'bad' : delayData.avgDelay > 10 ? 'warn' : 'good');
+  
+  weatherEl.textContent = weatherData.description;
+  weatherEl.className = 'metric-value ' + (weatherData.impact === 'severe' ? 'bad' : weatherData.impact === 'moderate' ? 'warn' : 'good');
   
   // Calculate composite score
   const scoreData = {
@@ -382,25 +391,25 @@ async function updateAirport(airportCode) {
   };
   
   const score = calculateAdvisoryScore(scoreData);
-  document.getElementById(`${prefix}Score`).textContent = `${score}/100`;
-  document.getElementById(`${prefix}Score`).className = `metric-value ${score >= 80 ? 'good' : score >= 60 ? 'warn' : 'bad'}`;
+  scoreEl.textContent = score + '/100';
+  scoreEl.className = 'metric-value ' + (score >= 80 ? 'good' : score >= 60 ? 'warn' : 'bad');
   
   // Update status badge
   const rec = getRecommendation(score, airportCode, tsaData.minutes, delayData.avgDelay);
-  document.getElementById(`${prefix}Status`).textContent = rec.status === 'good' ? '✓ Good' : rec.status === 'moderate' ? '⚠ Moderate' : '🚨 Alert';
-  document.getElementById(`${prefix}Status`).className = `status-badge ${rec.status}`;
+  statusEl.textContent = rec.status === 'good' ? '✓ Good' : rec.status === 'moderate' ? '⚠ Moderate' : '🚨 Alert';
+  statusEl.className = 'status-badge ' + rec.status;
   
   // Show recommendation
-  document.getElementById(`${prefix}Rec`).style.display = 'block';
-  document.getElementById(`${prefix}RecText`).innerHTML = `${rec.text}<br><br><strong>Recommended arrival:</strong> ${rec.arriveBy}`;
+  recEl.style.display = 'block';
+  recTextEl.innerHTML = rec.text + '<br><br><strong>Recommended arrival:</strong> ' + rec.arriveBy;
   
   // Update data sources
-  const sourcesHTML = `
-    <div class="source-item"><span class="${tsaData.error ? 'source-fail' : 'source-check'}">${tsaData.error ? '✗' : '✓'}</span> ${tsaData.source}</div>
-    <div class="source-item"><span class="${delayData.error ? 'source-fail' : 'source-check'}">${delayData.error ? '✗' : '✓'}</span> ${delayData.source}</div>
-    <div class="source-item"><span class="${weatherData.error ? 'source-fail' : 'source-check'}">${weatherData.error ? '✗' : '✓'}</span> Open-Meteo Weather</div>
-  `;
-  document.getElementById(`${prefix}Sources`).innerHTML = sourcesHTML;
+  const sourcesHTML = 
+    '<div class="source-item"><span class="' + (tsaData.error ? 'source-fail' : 'source-check') + '">' + (tsaData.error ? '✗' : '✓') + '</span> ' + tsaData.source + '</div>' +
+    '<div class="source-item"><span class="' + (delayData.error ? 'source-fail' : 'source-check') + '">' + (delayData.error ? '✗' : '✓') + '</span> ' + delayData.source + '</div>' +
+    '<div class="source-item"><span class="' + (weatherData.error ? 'source-fail' : 'source-check') + '">' + (weatherData.error ? '✗' : '✓') + '</span> Open-Meteo Weather</div>';
+  
+  sourcesEl.innerHTML = sourcesHTML;
 }
 
 async function refreshAll() {
