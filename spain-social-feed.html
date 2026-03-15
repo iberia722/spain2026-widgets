@@ -575,6 +575,19 @@
             }
 
             try {
+                // Limit to first 15 posts and strip unnecessary fields to reduce payload size
+                const postsForClaude = posts.slice(0, 15).map(post => ({
+                    desc: post.desc || post.title || '',
+                    author: {
+                        unique_id: post.author?.unique_id || '',
+                        nickname: post.author?.nickname || ''
+                    },
+                    statistics: {
+                        play_count: post.statistics?.play_count || post.stats?.play_count || 0,
+                        digg_count: post.statistics?.digg_count || post.stats?.digg_count || 0
+                    }
+                }));
+
                 // Call serverless function to filter posts
                 const response = await fetch(claudeEndpoint, {
                     method: 'POST',
@@ -582,7 +595,7 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        posts: posts,
+                        posts: postsForClaude,
                         city: city,
                         minRelevanceScore: CONFIG.minRelevanceScore
                     })
