@@ -9,20 +9,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Ensure body is parsed
-  let { posts, city, minRelevanceScore } = req.body;
-
-  // If body isn't parsed, try to parse it
-  if (typeof req.body === 'string') {
-    try {
-      const parsed = JSON.parse(req.body);
-      posts = parsed.posts;
-      city = parsed.city;
-      minRelevanceScore = parsed.minRelevanceScore;
-    } catch (e) {
-      console.error('Failed to parse request body:', e);
-      return res.status(400).json({ error: 'Invalid JSON in request body' });
-    }
+  // Parse body - handle both string and pre-parsed object formats
+  let posts, city, minRelevanceScore;
+  try {
+    const bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    posts = bodyData.posts;
+    city = bodyData.city;
+    minRelevanceScore = bodyData.minRelevanceScore;
+  } catch (e) {
+    console.error('Failed to parse request body:', e);
+    return res.status(400).json({ error: 'Invalid JSON in request body' });
   }
 
   // Log request for debugging
@@ -30,13 +26,15 @@ export default async function handler(req, res) {
     postsCount: posts?.length,
     city,
     minRelevanceScore,
+    postsType: typeof posts,
+    bodyType: typeof req.body,
     bodySize: JSON.stringify(req.body).length
   });
 
   // Validate inputs
   if (!posts || !Array.isArray(posts) || posts.length === 0) {
-    console.error('Invalid posts:', { posts, isArray: Array.isArray(posts) });
-    return res.status(400).json({ error: 'No posts provided' });
+    console.error('Invalid posts:', { posts, isArray: Array.isArray(posts), type: typeof posts });
+    return res.status(400).json({ error: 'No posts provided', debug: { postsType: typeof posts, isArray: Array.isArray(posts), postsLength: posts?.length } });
   }
 
   if (!city) {
