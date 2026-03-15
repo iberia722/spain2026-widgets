@@ -58,12 +58,17 @@ The widget makes direct API calls from the browser, which will fail due to CORS.
 **Create `api/tiktok-search.js`:**
 ```javascript
 export default async function handler(req, res) {
-  const { keyword, count } = req.query;
+  const { query } = req.query;
   const apiKey = process.env.SCRAPECREATORS_API_KEY;
 
+  if (!query) {
+    return res.status(400).json({ error: 'query parameter required' });
+  }
+
   try {
-    // TODO: Confirm correct ScrapeCreators endpoint
-    const response = await fetch('https://api.scrapecreators.com/v1/tiktok/search?keyword=' + encodeURIComponent(keyword) + '&count=' + count, {
+    // ScrapeCreators API: GET /v1/tiktok/search/keyword
+    const response = await fetch('https://api.scrapecreators.com/v1/tiktok/search/keyword?query=' + encodeURIComponent(query), {
+      method: 'GET',
       headers: { 'x-api-key': apiKey }
     });
 
@@ -110,9 +115,9 @@ export default async function handler(req, res) {
 In `spain-social-feed.html`, update `searchTikTokByHashtag()` and `filterPostsWithClaude()` to call your Vercel API endpoints instead of external APIs.
 
 ## Known Issues
-1. **ScrapeCreators API Endpoint** — The `/v1/tiktok/search` endpoint returns 404. Need to confirm correct endpoint with ScrapeCreators.
-2. **CORS** — Browser cannot directly call external APIs. Use Vercel serverless functions as proxies.
-3. **Rate Limiting** — TikTok APIs may have strict rate limits. Consider caching or batching requests.
+1. **CORS** — Browser cannot directly call external APIs. Use Vercel serverless functions as proxies.
+2. **Rate Limiting** — TikTok APIs may have strict rate limits (1 credit per request). Consider caching or batching requests.
+3. **Response Format** — Verify ScrapeCreators response format matches expected structure (may need to adjust response parsing).
 
 ## API Keys Required
 - **Claude (Anthropic)**: https://console.anthropic.com

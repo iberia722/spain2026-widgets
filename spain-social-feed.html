@@ -349,13 +349,16 @@
     </div>
     <script>
         // ============================================
-        // CONFIGURATION - PASTE YOUR API KEYS HERE
+        // CONFIGURATION - API KEYS
         // ============================================
         const CONFIG = {
-            // API keys are set via environment variables in Vercel
-            // For local testing, add them here or pass via window object
-            scrapeCreatorsKey: window.SCRAPECREATORS_API_KEY || '',
-            claudeApiKey: window.CLAUDE_API_KEY || '',
+            // ScrapeCreators API key for TikTok search
+            // NOTE: Should be loaded from environment variables in production
+            scrapeCreatorsKey: 'Kg6ZVBAvfyZXez36oFWbZZ5qH4h1',
+
+            // Claude API is now proxied through serverless function
+            // No need to expose the key in the browser
+            claudeEndpoint: '/api/claude-filter',
 
             // City configuration
             cities: ['barcelona', 'zaragoza', 'segovia', 'madrid'],
@@ -395,52 +398,92 @@
         // API FUNCTIONS
         // ============================================
         async function searchTikTokByHashtag(hashtag, count = 10) {
-            // MOCK DATA - Replace with real API when endpoint is confirmed
+            // Use real API if key is available, otherwise use mock data
+            if (!CONFIG.scrapeCreatorsKey) {
+                return getMockPosts(hashtag, count);
+            }
+
+            try {
+                // Determine which endpoint to use
+                let url;
+                let params = new URLSearchParams();
+
+                if (hashtag.startsWith('#')) {
+                    // Use hashtag endpoint for hashtags
+                    url = 'https://api.scrapecreators.com/v1/tiktok/search/hashtag';
+                    params.append('hashtag', hashtag.substring(1)); // Remove # for hashtag endpoint
+                } else {
+                    // Use keyword endpoint for other searches
+                    url = 'https://api.scrapecreators.com/v1/tiktok/search/keyword';
+                    params.append('query', hashtag);
+                }
+
+                const response = await fetch(url + '?' + params.toString(), {
+                    method: 'GET',
+                    headers: {
+                        'x-api-key': CONFIG.scrapeCreatorsKey
+                    }
+                });
+
+                if (!response.ok) {
+                    console.warn('ScrapeCreators API error:', response.status);
+                    return getMockPosts(hashtag, count);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.warn('API fetch failed, using mock data:', error);
+                return getMockPosts(hashtag, count);
+            }
+        }
+
+        function getMockPosts(hashtag, count) {
             const mockPosts = {
                 'barcelona': [
                     {
-                        id: '1',
+                        aweme_id: '1',
                         desc: 'Barcelona vibes 🎨 Light layers perfect for this time of year',
                         author: { unique_id: 'travelgirl_', nickname: 'Sarah Travel' },
-                        stats: { play_count: 45000, digg_count: 3200 },
+                        statistics: { play_count: 45000, digg_count: 3200 },
                         cover: 'https://images.unsplash.com/photo-1552883750-104c34f904fe?w=300&h=500&fit=crop',
                         create_time: Math.floor(Date.now() / 1000) - 86400
                     },
                     {
-                        id: '2',
+                        aweme_id: '2',
                         desc: 'Street style in Barcelona! Denim jacket + white tee combo',
                         author: { unique_id: 'fashionista', nickname: 'Alex Style' },
-                        stats: { play_count: 62000, digg_count: 4100 },
+                        statistics: { play_count: 62000, digg_count: 4100 },
                         cover: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=500&fit=crop',
                         create_time: Math.floor(Date.now() / 1000) - 172800
                     }
                 ],
                 'madrid': [
                     {
-                        id: '3',
+                        aweme_id: '3',
                         desc: 'Madrid outfit: Blazer weather today! 👗',
                         author: { unique_id: 'urbanexplorer', nickname: 'Maria' },
-                        stats: { play_count: 38000, digg_count: 2800 },
+                        statistics: { play_count: 38000, digg_count: 2800 },
                         cover: 'https://images.unsplash.com/photo-1515234515565-e22c56f52408?w=300&h=500&fit=crop',
                         create_time: Math.floor(Date.now() / 1000) - 259200
                     }
                 ],
                 'zaragoza': [
                     {
-                        id: '4',
+                        aweme_id: '4',
                         desc: 'Zaragoza spring fashion! What to pack for Spain',
                         author: { unique_id: 'backpacker', nickname: 'Tom' },
-                        stats: { play_count: 28000, digg_count: 1900 },
+                        statistics: { play_count: 28000, digg_count: 1900 },
                         cover: 'https://images.unsplash.com/photo-1506315996181-b06deb31cf65?w=300&h=500&fit=crop',
                         create_time: Math.floor(Date.now() / 1000) - 345600
                     }
                 ],
                 'segovia': [
                     {
-                        id: '5',
+                        aweme_id: '5',
                         desc: 'Segovia castle day! Comfortable walking outfit with light jacket',
                         author: { unique_id: 'wanderlust', nickname: 'Emma' },
-                        stats: { play_count: 51000, digg_count: 3600 },
+                        statistics: { play_count: 51000, digg_count: 3600 },
                         cover: 'https://images.unsplash.com/photo-1445034925594-796ad230e9cd?w=300&h=500&fit=crop',
                         create_time: Math.floor(Date.now() / 1000) - 432000
                     }
@@ -456,17 +499,27 @@
 
             return { data: [] };
         }
+
         async function fetchCityPosts(city) {
             const queries = CONFIG.searchQueries[city];
             const allPosts = [];
             const postsPerQuery = Math.ceil(CONFIG.postsPerCity / queries.length);
+
             // Fetch from all hashtags
             for (const query of queries) {
                 try {
                     const data = await searchTikTokByHashtag(query, postsPerQuery);
 
-                    // Extract posts from response
-                    if (data && data.data && Array.isArray(data.data)) {
+                    // Extract posts from ScrapeCreators response format
+                    if (data && data.search_item_list && Array.isArray(data.search_item_list)) {
+                        // Real API response: each item has aweme_info
+                        for (const item of data.search_item_list) {
+                            if (item.aweme_info) {
+                                allPosts.push(item.aweme_info);
+                            }
+                        }
+                    } else if (data && data.data && Array.isArray(data.data)) {
+                        // Fallback for mock data format
                         allPosts.push(...data.data);
                     }
                 } catch (error) {
@@ -474,11 +527,12 @@
                     // Continue with other queries even if one fails
                 }
             }
+
             // Deduplicate by video ID
             const uniquePosts = [];
             const seenIds = new Set();
             for (const post of allPosts) {
-                const id = post.id || post.video_id || post.aweme_id;
+                const id = post.aweme_id || post.id || post.video_id;
                 if (id && !seenIds.has(id)) {
                     seenIds.add(id);
                     uniquePosts.push(post);
@@ -486,87 +540,45 @@
             }
             return uniquePosts;
         }
+
         async function filterPostsWithClaude(posts, city) {
             if (!posts || posts.length === 0) return [];
 
-            // Check if Claude API key is available
-            const claudeKey = CONFIG.claudeApiKey || window.CLAUDE_API_KEY;
-            if (!claudeKey) {
-                console.warn('Claude API key not available - returning unfiltered posts');
+            // Check if serverless function endpoint is available
+            const claudeEndpoint = CONFIG.claudeEndpoint;
+            if (!claudeEndpoint) {
+                console.warn('Claude endpoint not configured - returning unfiltered posts');
                 return posts.slice(0, 10);
             }
 
-            // Prepare post data for Claude
-            const postSummaries = posts.map((post, index) => ({
-                index: index,
-                caption: post.desc || post.title || '',
-                username: post.author?.unique_id || post.author?.nickname || 'unknown',
-                stats: {
-                    views: post.stats?.play_count || 0,
-                    likes: post.stats?.digg_count || 0
-                }
-            }));
-            const prompt = `You are analyzing TikTok posts from ${city}, Spain to help a traveler understand what people are currently wearing and the weather conditions.
-Here are ${postSummaries.length} posts to analyze:
-${JSON.stringify(postSummaries, null, 2)}
-For each post, determine:
-1. Is it relevant to outfits/clothing/fashion/weather? (yes/no)
-2. Relevance score (0-10, where 10 is highly relevant)
-3. Outfit description (what people are wearing)
-4. Weather context (if mentioned)
-5. Any crowd/location insights
-Return ONLY a JSON array with this structure:
-[
-  {
-    "index": 0,
-    "relevant": true,
-    "score": 8.5,
-    "outfit": "Light jacket and jeans, layering recommended",
-    "weather": "Cool mornings, warm afternoons",
-    "insights": "Sagrada Familia less crowded on weekdays"
-  },
-  ...
-]
-Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only include posts that actually mention clothing, outfits, fashion, or weather.`;
             try {
-                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                // Call serverless function to filter posts
+                const response = await fetch(claudeEndpoint, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': claudeKey
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        model: 'claude-opus-4-6',
-                        max_tokens: 4000,
-                        messages: [
-                            { role: 'user', content: prompt }
-                        ]
+                        posts: posts,
+                        city: city,
+                        minRelevanceScore: CONFIG.minRelevanceScore
                     })
                 });
-                if (!response.ok) {
-                    throw new Error('Claude API error: ' + response.status);
-                }
-                const data = await response.json();
-                const textContent = data.content.find(item => item.type === 'text');
 
-                if (!textContent) {
-                    throw new Error('No text response from Claude');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Server error: ${response.status} - ${errorData.error}`);
                 }
-                // Parse Claude's response
-                let analysisResults;
-                try {
-                    // Remove markdown code blocks if present
-                    let jsonText = textContent.text.trim();
-                    jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-                    analysisResults = JSON.parse(jsonText);
-                } catch (parseError) {
-                    console.error('Error parsing Claude response:', parseError);
-                    console.log('Raw response:', textContent.text);
-                    return [];
+
+                const data = await response.json();
+
+                if (!data.success || !data.analyses) {
+                    throw new Error('Invalid response from Claude filter endpoint');
                 }
+
                 // Match analysis back to original posts
                 const filteredPosts = [];
-                for (const analysis of analysisResults) {
+                for (const analysis of data.analyses) {
                     if (analysis.relevant && analysis.score >= CONFIG.minRelevanceScore) {
                         const originalPost = posts[analysis.index];
                         filteredPosts.push({
@@ -584,9 +596,11 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
             } catch (error) {
                 console.error('Claude filtering error:', error);
                 // Return unfiltered posts if Claude fails
+                console.warn('Falling back to unfiltered posts');
                 return posts.slice(0, 10);
             }
         }
+
         // ============================================
         // UI RENDERING
         // ============================================
@@ -602,9 +616,9 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 </div>
             `;
         }
+
         function renderError(city, error) {
             const panel = document.getElementById(city + '-panel');
-            const data = state.cityData[city];
 
             panel.innerHTML = `
                 <div class="controls">
@@ -620,10 +634,12 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 </div>
             `;
         }
+
         function renderPosts(city) {
             const panel = document.getElementById(city + '-panel');
             const data = state.cityData[city];
             const posts = data.posts;
+
             if (posts.length === 0) {
                 panel.innerHTML = `
                     <div class="controls">
@@ -637,6 +653,7 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 `;
                 return;
             }
+
             const queriesText = CONFIG.searchQueries[city].join(', ');
 
             let html = `
@@ -649,24 +666,36 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 </div>
                 <div class="feed-grid">
             `;
+
             for (const post of posts) {
                 html += renderPostCard(post);
             }
+
             html += '</div>';
             panel.innerHTML = html;
         }
+
         function renderPostCard(post) {
             const username = post.author?.unique_id || post.author?.nickname || 'unknown';
             const caption = (post.desc || post.title || '').substring(0, 200);
-            const thumbnail = post.video?.cover || post.cover || 'https://via.placeholder.com/400x711?text=No+Image';
-            const videoUrl = post.video?.play_addr?.url_list?.[0] || '#';
-            const tiktokUrl = 'https://www.tiktok.com/@' + username + '/video/' + (post.id || post.aweme_id || '');
 
-            const views = formatNumber(post.stats?.play_count || 0);
-            const likes = formatNumber(post.stats?.digg_count || 0);
+            // Extract thumbnail from various possible formats
+            let thumbnail = 'https://via.placeholder.com/400x711?text=No+Image';
+            if (post.video?.cover?.url_list?.[0]) {
+                thumbnail = post.video.cover.url_list[0];
+            } else if (post.video?.cover) {
+                thumbnail = post.video.cover;
+            } else if (post.cover) {
+                thumbnail = post.cover;
+            }
+
+            const tiktokUrl = 'https://www.tiktok.com/@' + username + '/video/' + (post.aweme_id || post.id || '');
+            const views = formatNumber(post.statistics?.play_count || post.stats?.play_count || 0);
+            const likes = formatNumber(post.statistics?.digg_count || post.stats?.digg_count || 0);
             const createTime = post.create_time ? formatDate(post.create_time) : 'Recently';
             const analysis = post.aiAnalysis || {};
             const score = analysis.score || 0;
+
             let analysisHtml = '';
             if (analysis.outfit || analysis.weather || analysis.insights) {
                 analysisHtml = '<div class="ai-analysis">';
@@ -681,10 +710,11 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 }
                 analysisHtml += '</div>';
             }
+
             return `
                 <div class="post-card" onclick="window.open('${tiktokUrl}', '_blank')">
                     <div class="thumbnail-wrapper">
-                        <img src="${thumbnail}" alt="TikTok post" class="thumbnail" loading="lazy">
+                        <img src="${thumbnail}" alt="TikTok post" class="thumbnail" loading="lazy" onerror="this.src='https://via.placeholder.com/400x711?text=No+Image'">
                         <div class="ai-badge">✨ AI Filtered</div>
                         <div class="relevance-score">${score.toFixed(1)}/10</div>
                     </div>
@@ -701,6 +731,7 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 </div>
             `;
         }
+
         // ============================================
         // UTILITY FUNCTIONS
         // ============================================
@@ -713,6 +744,7 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
             };
             return icons[city] || '📍';
         }
+
         function formatNumber(num) {
             if (num >= 1000000) {
                 return (num / 1000000).toFixed(1) + 'M';
@@ -722,6 +754,7 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
             }
             return num.toString();
         }
+
         function formatDate(timestamp) {
             const date = new Date(timestamp * 1000);
             const now = new Date();
@@ -733,6 +766,7 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
             if (diffDays < 14) return '1 week ago';
             return '2 weeks ago';
         }
+
         // ============================================
         // MAIN FUNCTIONS
         // ============================================
@@ -744,21 +778,26 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 renderError(city, 'Please add your ScrapeCreators API key in the configuration section at the top of this file.');
                 return;
             }
+
             state.cityData[city].loading = true;
             state.cityData[city].error = null;
             renderLoading(city);
+
             try {
                 // Step 1: Fetch posts from TikTok
                 console.log('Fetching posts for', city);
                 const rawPosts = await fetchCityPosts(city);
                 console.log('Fetched', rawPosts.length, 'raw posts');
+
                 if (rawPosts.length === 0) {
                     throw new Error('No posts found. Try different search terms or check API status.');
                 }
+
                 // Step 2: Filter with Claude
                 console.log('Filtering posts with Claude...');
                 const filteredPosts = await filterPostsWithClaude(rawPosts, city);
                 console.log('Claude filtered to', filteredPosts.length, 'relevant posts');
+
                 // Step 3: Update state and render
                 state.cityData[city].posts = filteredPosts;
                 state.cityData[city].loading = false;
@@ -770,6 +809,7 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 renderError(city, error.message);
             }
         }
+
         function switchCity(city) {
             state.currentCity = city;
             // Update tabs
@@ -783,6 +823,7 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
             });
             document.getElementById(city + '-panel').classList.add('active');
         }
+
         // ============================================
         // INITIALIZATION
         // ============================================
@@ -793,12 +834,12 @@ Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only i
                 switchCity(city);
             });
         });
+
         // Render initial empty state for all cities
         CONFIG.cities.forEach(city => {
             renderPosts(city);
         });
-        // Auto-load Barcelona on page load (optional - remove if you want manual only)
-        // setTimeout(() => refreshCity('barcelona'), 1000);
+
         console.log('Spain Social Feed initialized!');
         console.log('Click any city tab, then click "Load Posts" to fetch content.');
     </script>
