@@ -8,10 +8,6 @@
       "destination": "/:path*"
     }
   ],
-  "env": [
-    "SCRAPECREATORS_API_KEY",
-    "CLAUDE_API_KEY"
-  ],
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs20.x",
