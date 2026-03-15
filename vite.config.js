@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     viteStaticCopy({
       targets: [
+        { src: 'index.html', dest: '.' },
         { src: 'briefing.html', dest: '.' },
         { src: 'dashboard.html', dest: '.' },
         { src: 'barcelona-map.html', dest: '.' },
@@ -15,7 +16,10 @@ export default defineConfig({
         { src: 'madrid-weather.html', dest: '.' },
         { src: 'zaragoza-map.html', dest: '.' },
         { src: 'zaragoza-weather.html', dest: '.' },
+        { src: 'spain-social-feed.html', dest: '.' },
         { src: 'airport-advisory.html', dest: '.' },
+        { src: 'airport-alerts-notion.html', dest: '.' },
+        { src: 'airport-icon.html', dest: '.' },
       ]
     })
   ],
