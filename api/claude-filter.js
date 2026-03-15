@@ -9,14 +9,38 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { posts, city, minRelevanceScore } = req.body;
+  // Ensure body is parsed
+  let { posts, city, minRelevanceScore } = req.body;
+
+  // If body isn't parsed, try to parse it
+  if (typeof req.body === 'string') {
+    try {
+      const parsed = JSON.parse(req.body);
+      posts = parsed.posts;
+      city = parsed.city;
+      minRelevanceScore = parsed.minRelevanceScore;
+    } catch (e) {
+      console.error('Failed to parse request body:', e);
+      return res.status(400).json({ error: 'Invalid JSON in request body' });
+    }
+  }
+
+  // Log request for debugging
+  console.log('claude-filter called with:', {
+    postsCount: posts?.length,
+    city,
+    minRelevanceScore,
+    bodySize: JSON.stringify(req.body).length
+  });
 
   // Validate inputs
   if (!posts || !Array.isArray(posts) || posts.length === 0) {
+    console.error('Invalid posts:', { posts, isArray: Array.isArray(posts) });
     return res.status(400).json({ error: 'No posts provided' });
   }
 
   if (!city) {
+    console.error('No city provided');
     return res.status(400).json({ error: 'City parameter required' });
   }
 
