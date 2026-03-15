@@ -1,13 +1,6 @@
 {
   "buildCommand": "npm run build",
   "framework": "vanilla",
-  "public": "./",
-  "rewrites": [
-    {
-      "source": "/:path*",
-      "destination": "/:path*"
-    }
-  ],
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs20.x",
