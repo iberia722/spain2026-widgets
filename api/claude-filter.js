@@ -39,28 +39,42 @@ export default async function handler(req, res) {
       }
     }));
 
-    const prompt = `You are analyzing TikTok posts from ${city}, Spain to help a traveler understand what people are currently wearing and the weather conditions.
+    const prompt = `You are analyzing TikTok posts from ${city}, Spain to help a traveler understand what people are currently wearing in MARCH.
+CRITICAL SEASONAL FILTER: It is currently MARCH 2026. March weather in Spain:
+- Barcelona: 9-15°C, cool mornings, layered clothing essential, NOT summer weather
+- Madrid: 8-16°C, cool, jacket required, NOT summer weather
+- Zaragoza: 7-15°C, cool, layers necessary, NOT summer weather
+- Segovia: 6-14°C, cold, winter coat appropriate, NOT summer weather
+
+REJECT any posts showing summer clothing (crop tops, shorts, sleeveless without context) unless explicitly about a warm/sunny exception day. These indicate the video was recorded months ago and are NOT current.
+
 Here are ${postSummaries.length} posts to analyze:
 ${JSON.stringify(postSummaries, null, 2)}
+
 For each post, determine:
-1. Is it relevant to outfits/clothing/fashion/weather? (yes/no)
-2. Relevance score (0-10, where 10 is highly relevant)
+1. Is it relevant to current clothing/fashion/street style/weather in March? (yes/no)
+2. Relevance score (0-10, where 10 is highly relevant):
+   - 8-10: Shows appropriate March layering, jackets, seasonal wear that matches current conditions
+   - 6-7: Relevant but questionable seasonal fit, or generic outfit content
+   - <6: Summer clothing, outdated content, not useful for March travel planning
 3. Outfit description (what people are wearing)
 4. Weather context (if mentioned)
 5. Any crowd/location insights
+
 Return ONLY a JSON array with this structure:
 [
   {
     "index": 0,
     "relevant": true,
     "score": 8.5,
-    "outfit": "Light jacket and jeans, layering recommended",
-    "weather": "Cool mornings, warm afternoons",
-    "insights": "Sagrada Familia less crowded on weekdays"
+    "outfit": "Leather jacket with jeans and sneakers, scarf recommended",
+    "weather": "Cool morning, clear skies",
+    "insights": "Parque del Retiro busy on weekends"
   },
   ...
 ]
-Only include posts with score >= ${minRelevanceScore || 6.5}. Be strict - only include posts that actually mention clothing, outfits, fashion, or weather.`;
+
+Only include posts with score >= ${minRelevanceScore || 6.5}. Be VERY strict - reject posts with summer clothing or obvious seasonal mismatch. Only include posts showing CURRENT March-appropriate attire.`;
 
     // Call Claude API
     const response = await fetch('https://api.anthropic.com/v1/messages', {
