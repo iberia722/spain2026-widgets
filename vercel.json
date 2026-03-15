@@ -1,6 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "framework": "vanilla",
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs20.x",
