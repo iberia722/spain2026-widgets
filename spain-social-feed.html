@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spain Travel Feed • Outfit Intel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --terracotta: #C85A3D;
+            --cream: #FFF8F0;
+            --deep-blue: #1a3a52;
+            --sage: #8B9D83;
+            --warm-gray: #D4C5B9;
+            --shadow: rgba(200, 90, 61, 0.15);
+        }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, #FFF5E6 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: var(--deep-blue);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: var(--terracotta);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--deep-blue);
+            opacity: 0.7;
+            font-weight: 500;
+        }
+        .date-range {
+            display: inline-block;
+            background: var(--terracotta);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            letter-spacing: 0.03em;
+        }
+        .city-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 3px solid var(--warm-gray);
+            padding-bottom: 0;
+            flex-wrap: wrap;
+        }
+        .tab {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 1rem 2rem;
+            background: none;
+            border: none;
+            color: var(--deep-blue);
+            opacity: 0.4;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -3px;
+            position: relative;
+        }
+        .tab:hover {
+            opacity: 0.7;
+        }
+        .tab.active {
+            opacity: 1;
+            color: var(--terracotta);
+            border-bottom-color: var(--terracotta);
+        }
+        .tab.active::after {
+            content: '✦';
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+        }
+        .content-panel {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .content-panel.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .refresh-btn {
+            background: var(--terracotta);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(200, 90, 61, 0.3);
+        }
+        .refresh-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(200, 90, 61, 0.4);
+        }
+        .refresh-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        .refresh-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            font-size: 0.95rem;
+            color: var(--deep-blue);
+            opacity: 0.7;
+            flex: 1;
+        }
+        .status .count {
+            font-weight: 700;
+            color: var(--terracotta);
+        }
+        .feed-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .post-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(200, 90, 61, 0.25);
+        }
+        .thumbnail-wrapper {
+            position: relative;
+            aspect-ratio: 9/16;
+            background: linear-gradient(135deg, var(--warm-gray) 0%, var(--sage) 100%);
+            overflow: hidden;
+        }
+        .thumbnail {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .post-card:hover .thumbnail {
+            transform: scale(1.05);
+        }
+        .ai-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(26, 58, 82, 0.9);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .relevance-score {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: var(--terracotta);
+            color: white;
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+        .post-content {
+            padding: 1.25rem;
+        }
+        .post-username {
+            font-weight: 700;
+            color: var(--deep-blue);
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .post-caption {
+            font-size: 0.9rem;
+            color: var(--deep-blue);
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .ai-analysis {
+            background: linear-gradient(135deg, #FFF8F0 0%, #FFF5E6 100%);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+            border-left: 3px solid var(--terracotta);
+        }
+        .ai-analysis strong {
+            color: var(--terracotta);
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+        .post-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--deep-blue);
+            opacity: 0.6;
+            flex-wrap: wrap;
+        }
+        .post-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: var(--deep-blue);
+            opacity: 0.7;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--warm-gray);
+            border-top-color: var(--terracotta);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem;
+            color: var(--deep-blue);
+            opacity: 0.6;
+        }
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .error-state {
+            text-align: center;
+            padding: 2rem;
+            background: #ffe6e6;
+            border-radius: 12px;
+            color: #c82333;
+            margin-bottom: 2rem;
+        }
+        .error-state strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .city-tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                font-size: 1.2rem;
+                text-align: left;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .feed-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Spain Travel Feed</h1>
+            <div class="subtitle">What are people wearing right now?</div>
+            <div class="date-range">📍 Last <span id="lookback-display">14</span> Days • March 2026</div>
+        </header>
+        <div class="city-tabs">
+            <button class="tab active" data-city="barcelona">Barcelona</button>
+            <button class="tab" data-city="zaragoza">Zaragoza</button>
+            <button class="tab" data-city="segovia">Segovia</button>
+            <button class="tab" data-city="madrid">Madrid</button>
+        </div>
+        <!-- City Panels (generated dynamically) -->
+        <div id="barcelona-panel" class="content-panel active"></div>
+        <div id="zaragoza-panel" class="content-panel"></div>
+        <div id="segovia-panel" class="content-panel"></div>
+        <div id="madrid-panel" class="content-panel"></div>
+    </div>
+    <script>
+        // ============================================
+        // CONFIGURATION - PASTE YOUR API KEYS HERE
+        // ============================================
+        const CONFIG = {
+            // API keys are set via environment variables in Vercel
+            // For local testing, add them here or pass via window object
+            scrapeCreatorsKey: window.SCRAPECREATORS_API_KEY || '',
+            claudeApiKey: window.CLAUDE_API_KEY || '',
+
+            // City configuration
+            cities: ['barcelona', 'zaragoza', 'segovia', 'madrid'],
+
+            // Days to look back
+            lookbackDays: 14,
+
+            // Posts to fetch per city (before filtering)
+            postsPerCity: 30,
+
+            // Minimum relevance score to display (0-10)
+            minRelevanceScore: 6.5,
+
+            // Search queries per city
+            searchQueries: {
+                'barcelona': ['#Barcelona outfit', '#BarcelonaFashion', 'Barcelona what to wear'],
+                'madrid': ['#Madrid outfit', '#MadridStyle', 'Madrid what to wear'],
+                'zaragoza': ['#Zaragoza outfit', 'Zaragoza fashion', 'Zaragoza what to wear'],
+                'segovia': ['#Segovia outfit', 'Segovia fashion', 'Segovia what to wear']
+            }
+        };
+        // Update lookback display
+        document.getElementById('lookback-display').textContent = CONFIG.lookbackDays;
+        // ============================================
+        // STATE MANAGEMENT
+        // ============================================
+        const state = {
+            currentCity: 'barcelona',
+            cityData: {
+                barcelona: { posts: [], loading: false, error: null },
+                zaragoza: { posts: [], loading: false, error: null },
+                segovia: { posts: [], loading: false, error: null },
+                madrid: { posts: [], loading: false, error: null }
+            }
+        };
+        // ============================================
+        // API FUNCTIONS
+        // ============================================
+        async function searchTikTokByHashtag(hashtag, count = 10) {
+            // MOCK DATA - Replace with real API when endpoint is confirmed
+            const mockPosts = {
+                'barcelona': [
+                    {
+                        id: '1',
+                        desc: 'Barcelona vibes 🎨 Light layers perfect for this time of year',
+                        author: { unique_id: 'travelgirl_', nickname: 'Sarah Travel' },
+                        stats: { play_count: 45000, digg_count: 3200 },
+                        cover: 'https://images.unsplash.com/photo-1552883750-104c34f904fe?w=300&h=500&fit=crop',
+                        create_time: Math.floor(Date.now() / 1000) - 86400
+                    },
+                    {
+                        id: '2',
+                        desc: 'Street style in Barcelona! Denim jacket + white tee combo',
+                        author: { unique_id: 'fashionista', nickname: 'Alex Style' },
+                        stats: { play_count: 62000, digg_count: 4100 },
+                        cover: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=500&fit=crop',
+                        create_time: Math.floor(Date.now() / 1000) - 172800
+                    }
+                ],
+                'madrid': [
+                    {
+                        id: '3',
+                        desc: 'Madrid outfit: Blazer weather today! 👗',
+                        author: { unique_id: 'urbanexplorer', nickname: 'Maria' },
+                        stats: { play_count: 38000, digg_count: 2800 },
+                        cover: 'https://images.unsplash.com/photo-1515234515565-e22c56f52408?w=300&h=500&fit=crop',
+                        create_time: Math.floor(Date.now() / 1000) - 259200
+                    }
+                ],
+                'zaragoza': [
+                    {
+                        id: '4',
+                        desc: 'Zaragoza spring fashion! What to pack for Spain',
+                        author: { unique_id: 'backpacker', nickname: 'Tom' },
+                        stats: { play_count: 28000, digg_count: 1900 },
+                        cover: 'https://images.unsplash.com/photo-1506315996181-b06deb31cf65?w=300&h=500&fit=crop',
+                        create_time: Math.floor(Date.now() / 1000) - 345600
+                    }
+                ],
+                'segovia': [
+                    {
+                        id: '5',
+                        desc: 'Segovia castle day! Comfortable walking outfit with light jacket',
+                        author: { unique_id: 'wanderlust', nickname: 'Emma' },
+                        stats: { play_count: 51000, digg_count: 3600 },
+                        cover: 'https://images.unsplash.com/photo-1445034925594-796ad230e9cd?w=300&h=500&fit=crop',
+                        create_time: Math.floor(Date.now() / 1000) - 432000
+                    }
+                ]
+            };
+
+            // Return mock data based on hashtag city
+            for (const [city, posts] of Object.entries(mockPosts)) {
+                if (hashtag.toLowerCase().includes(city)) {
+                    return { data: posts.slice(0, count) };
+                }
+            }
+
+            return { data: [] };
+        }
+        async function fetchCityPosts(city) {
+            const queries = CONFIG.searchQueries[city];
+            const allPosts = [];
+            const postsPerQuery = Math.ceil(CONFIG.postsPerCity / queries.length);
+            // Fetch from all hashtags
+            for (const query of queries) {
+                try {
+                    const data = await searchTikTokByHashtag(query, postsPerQuery);
+
+                    // Extract posts from response
+                    if (data && data.data && Array.isArray(data.data)) {
+                        allPosts.push(...data.data);
+                    }
+                } catch (error) {
+                    console.error('Error fetching from query "' + query + '":', error);
+                    // Continue with other queries even if one fails
+                }
+            }
+            // Deduplicate by video ID
+            const uniquePosts = [];
+            const seenIds = new Set();
+            for (const post of allPosts) {
+                const id = post.id || post.video_id || post.aweme_id;
+                if (id && !seenIds.has(id)) {
+                    seenIds.add(id);
+                    uniquePosts.push(post);
+                }
+            }
+            return uniquePosts;
+        }
+        async function filterPostsWithClaude(posts, city) {
+            if (!posts || posts.length === 0) return [];
+
+            // Check if Claude API key is available
+            const claudeKey = CONFIG.claudeApiKey || window.CLAUDE_API_KEY;
+            if (!claudeKey) {
+                console.warn('Claude API key not available - returning unfiltered posts');
+                return posts.slice(0, 10);
+            }
+
+            // Prepare post data for Claude
+            const postSummaries = posts.map((post, index) => ({
+                index: index,
+                caption: post.desc || post.title || '',
+                username: post.author?.unique_id || post.author?.nickname || 'unknown',
+                stats: {
+                    views: post.stats?.play_count || 0,
+                    likes: post.stats?.digg_count || 0
+                }
+            }));
+            const prompt = `You are analyzing TikTok posts from ${city}, Spain to help a traveler understand what people are currently wearing and the weather conditions.
+Here are ${postSummaries.length} posts to analyze:
+${JSON.stringify(postSummaries, null, 2)}
+For each post, determine:
+1. Is it relevant to outfits/clothing/fashion/weather? (yes/no)
+2. Relevance score (0-10, where 10 is highly relevant)
+3. Outfit description (what people are wearing)
+4. Weather context (if mentioned)
+5. Any crowd/location insights
+Return ONLY a JSON array with this structure:
+[
+  {
+    "index": 0,
+    "relevant": true,
+    "score": 8.5,
+    "outfit": "Light jacket and jeans, layering recommended",
+    "weather": "Cool mornings, warm afternoons",
+    "insights": "Sagrada Familia less crowded on weekdays"
+  },
+  ...
+]
+Only include posts with score >= ${CONFIG.minRelevanceScore}. Be strict - only include posts that actually mention clothing, outfits, fashion, or weather.`;
+            try {
+                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': claudeKey
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-opus-4-6',
+                        max_tokens: 4000,
+                        messages: [
+                            { role: 'user', content: prompt }
+                        ]
+                    })
+                });
+                if (!response.ok) {
+                    throw new Error('Claude API error: ' + response.status);
+                }
+                const data = await response.json();
+                const textContent = data.content.find(item => item.type === 'text');
+
+                if (!textContent) {
+                    throw new Error('No text response from Claude');
+                }
+                // Parse Claude's response
+                let analysisResults;
+                try {
+                    // Remove markdown code blocks if present
+                    let jsonText = textContent.text.trim();
+                    jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+                    analysisResults = JSON.parse(jsonText);
+                } catch (parseError) {
+                    console.error('Error parsing Claude response:', parseError);
+                    console.log('Raw response:', textContent.text);
+                    return [];
+                }
+                // Match analysis back to original posts
+                const filteredPosts = [];
+                for (const analysis of analysisResults) {
+                    if (analysis.relevant && analysis.score >= CONFIG.minRelevanceScore) {
+                        const originalPost = posts[analysis.index];
+                        filteredPosts.push({
+                            ...originalPost,
+                            aiAnalysis: {
+                                score: analysis.score,
+                                outfit: analysis.outfit || '',
+                                weather: analysis.weather || '',
+                                insights: analysis.insights || ''
+                            }
+                        });
+                    }
+                }
+                return filteredPosts;
+            } catch (error) {
+                console.error('Claude filtering error:', error);
+                // Return unfiltered posts if Claude fails
+                return posts.slice(0, 10);
+            }
+        }
+        // ============================================
+        // UI RENDERING
+        // ============================================
+        function renderLoading(city) {
+            const panel = document.getElementById(city + '-panel');
+            panel.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>Searching TikTok for ${city} outfit posts...</div>
+                    <div style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.6;">
+                        This may take 30-60 seconds while Claude analyzes posts
+                    </div>
+                </div>
+            `;
+        }
+        function renderError(city, error) {
+            const panel = document.getElementById(city + '-panel');
+            const data = state.cityData[city];
+
+            panel.innerHTML = `
+                <div class="controls">
+                    <div class="status">Error loading posts</div>
+                    <button class="refresh-btn" onclick="refreshCity('${city}')">🔄 Retry</button>
+                </div>
+                <div class="error-state">
+                    <strong>⚠️ Error</strong>
+                    <div>${error}</div>
+                    <div style="margin-top: 1rem; font-size: 0.9rem;">
+                        Check console for details or try refreshing.
+                    </div>
+                </div>
+            `;
+        }
+        function renderPosts(city) {
+            const panel = document.getElementById(city + '-panel');
+            const data = state.cityData[city];
+            const posts = data.posts;
+            if (posts.length === 0) {
+                panel.innerHTML = `
+                    <div class="controls">
+                        <div class="status">No posts loaded</div>
+                        <button class="refresh-btn" onclick="refreshCity('${city}')">🔄 Load Posts</button>
+                    </div>
+                    <div class="empty-state">
+                        <div class="empty-state-icon">${getCityIcon(city)}</div>
+                        <div>Click "Load Posts" to fetch recent ${city} outfit content from TikTok</div>
+                    </div>
+                `;
+                return;
+            }
+            const queriesText = CONFIG.searchQueries[city].join(', ');
+
+            let html = `
+                <div class="controls">
+                    <div class="status">
+                        Showing <span class="count">${posts.length} posts</span> filtered by AI •
+                        Searched: ${queriesText}
+                    </div>
+                    <button class="refresh-btn" onclick="refreshCity('${city}')">🔄 Refresh</button>
+                </div>
+                <div class="feed-grid">
+            `;
+            for (const post of posts) {
+                html += renderPostCard(post);
+            }
+            html += '</div>';
+            panel.innerHTML = html;
+        }
+        function renderPostCard(post) {
+            const username = post.author?.unique_id || post.author?.nickname || 'unknown';
+            const caption = (post.desc || post.title || '').substring(0, 200);
+            const thumbnail = post.video?.cover || post.cover || 'https://via.placeholder.com/400x711?text=No+Image';
+            const videoUrl = post.video?.play_addr?.url_list?.[0] || '#';
+            const tiktokUrl = 'https://www.tiktok.com/@' + username + '/video/' + (post.id || post.aweme_id || '');
+
+            const views = formatNumber(post.stats?.play_count || 0);
+            const likes = formatNumber(post.stats?.digg_count || 0);
+            const createTime = post.create_time ? formatDate(post.create_time) : 'Recently';
+            const analysis = post.aiAnalysis || {};
+            const score = analysis.score || 0;
+            let analysisHtml = '';
+            if (analysis.outfit || analysis.weather || analysis.insights) {
+                analysisHtml = '<div class="ai-analysis">';
+                if (analysis.outfit) {
+                    analysisHtml += '<strong>Outfit:</strong> ' + analysis.outfit + '<br>';
+                }
+                if (analysis.weather) {
+                    analysisHtml += '<strong>Weather:</strong> ' + analysis.weather + '<br>';
+                }
+                if (analysis.insights) {
+                    analysisHtml += '<strong>Intel:</strong> ' + analysis.insights;
+                }
+                analysisHtml += '</div>';
+            }
+            return `
+                <div class="post-card" onclick="window.open('${tiktokUrl}', '_blank')">
+                    <div class="thumbnail-wrapper">
+                        <img src="${thumbnail}" alt="TikTok post" class="thumbnail" loading="lazy">
+                        <div class="ai-badge">✨ AI Filtered</div>
+                        <div class="relevance-score">${score.toFixed(1)}/10</div>
+                    </div>
+                    <div class="post-content">
+                        <div class="post-username">@${username}</div>
+                        <div class="post-caption">${caption}</div>
+                        ${analysisHtml}
+                        <div class="post-meta">
+                            <span>👁️ ${views}</span>
+                            <span>❤️ ${likes}</span>
+                            <span>📅 ${createTime}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function getCityIcon(city) {
+            const icons = {
+                barcelona: '🎨',
+                madrid: '👑',
+                zaragoza: '🎒',
+                segovia: '🏰'
+            };
+            return icons[city] || '📍';
+        }
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        function formatDate(timestamp) {
+            const date = new Date(timestamp * 1000);
+            const now = new Date();
+            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return diffDays + ' days ago';
+            if (diffDays < 14) return '1 week ago';
+            return '2 weeks ago';
+        }
+        // ============================================
+        // MAIN FUNCTIONS
+        // ============================================
+        async function refreshCity(city) {
+            console.log('Refreshing city:', city);
+
+            // Validate API key
+            if (!CONFIG.scrapeCreatorsKey) {
+                renderError(city, 'Please add your ScrapeCreators API key in the configuration section at the top of this file.');
+                return;
+            }
+            state.cityData[city].loading = true;
+            state.cityData[city].error = null;
+            renderLoading(city);
+            try {
+                // Step 1: Fetch posts from TikTok
+                console.log('Fetching posts for', city);
+                const rawPosts = await fetchCityPosts(city);
+                console.log('Fetched', rawPosts.length, 'raw posts');
+                if (rawPosts.length === 0) {
+                    throw new Error('No posts found. Try different search terms or check API status.');
+                }
+                // Step 2: Filter with Claude
+                console.log('Filtering posts with Claude...');
+                const filteredPosts = await filterPostsWithClaude(rawPosts, city);
+                console.log('Claude filtered to', filteredPosts.length, 'relevant posts');
+                // Step 3: Update state and render
+                state.cityData[city].posts = filteredPosts;
+                state.cityData[city].loading = false;
+                renderPosts(city);
+            } catch (error) {
+                console.error('Error refreshing city:', error);
+                state.cityData[city].loading = false;
+                state.cityData[city].error = error.message;
+                renderError(city, error.message);
+            }
+        }
+        function switchCity(city) {
+            state.currentCity = city;
+            // Update tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector('.tab[data-city="' + city + '"]').classList.add('active');
+            // Update panels
+            document.querySelectorAll('.content-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(city + '-panel').classList.add('active');
+        }
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        // Set up tab click handlers
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const city = this.getAttribute('data-city');
+                switchCity(city);
+            });
+        });
+        // Render initial empty state for all cities
+        CONFIG.cities.forEach(city => {
+            renderPosts(city);
+        });
+        // Auto-load Barcelona on page load (optional - remove if you want manual only)
+        // setTimeout(() => refreshCity('barcelona'), 1000);
+        console.log('Spain Social Feed initialized!');
+        console.log('Click any city tab, then click "Load Posts" to fetch content.');
+    </script>
+</body>
+</html>
