@@ -564,7 +564,7 @@
             return uniquePosts;
         }
 
-        async function filterPostsWithClaude(posts, city) {
+        async function filterPostsWithClaude(posts, city, onBatchStatus) {
             if (!posts || posts.length === 0) return [];
 
             // Check if serverless function endpoint is available
@@ -575,59 +575,74 @@
             }
 
             try {
-                // Limit to first 15 posts and strip unnecessary fields to reduce payload size
-                const postsForClaude = posts.slice(0, 15).map(post => ({
-                    desc: post.desc || post.title || '',
-                    author: {
-                        unique_id: post.author?.unique_id || '',
-                        nickname: post.author?.nickname || ''
-                    },
-                    statistics: {
-                        play_count: post.statistics?.play_count || post.stats?.play_count || 0,
-                        digg_count: post.statistics?.digg_count || post.stats?.digg_count || 0
-                    }
-                }));
-
-                // Call serverless function to filter posts
-                const response = await fetch(claudeEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        posts: postsForClaude,
-                        city: city,
-                        minRelevanceScore: CONFIG.minRelevanceScore
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`Server error: ${response.status} - ${errorData.error}`);
-                }
-
-                const data = await response.json();
-
-                if (!data.success || !data.analyses) {
-                    throw new Error('Invalid response from Claude filter endpoint');
-                }
-
-                // Match analysis back to original posts
                 const filteredPosts = [];
-                for (const analysis of data.analyses) {
-                    if (analysis.relevant && analysis.score >= CONFIG.minRelevanceScore) {
-                        const originalPost = posts[analysis.index];
-                        filteredPosts.push({
-                            ...originalPost,
-                            aiAnalysis: {
-                                score: analysis.score,
-                                outfit: analysis.outfit || '',
-                                weather: analysis.weather || '',
-                                insights: analysis.insights || ''
-                            }
-                        });
+
+                // Process in two batches of 15 to avoid payload size limits
+                for (let batchStart = 0; batchStart < posts.length; batchStart += 15) {
+                    const batchEnd = Math.min(batchStart + 15, posts.length);
+                    const batchPosts = posts.slice(batchStart, batchEnd);
+
+                    // Show status for second batch
+                    if (batchStart > 0) {
+                        const statusMsg = `Pulling next ${batchPosts.length} posts...`;
+                        console.log(statusMsg);
+                        if (onBatchStatus) onBatchStatus(statusMsg);
+                    }
+
+                    // Strip unnecessary fields to reduce payload size
+                    const postsForClaude = batchPosts.map(post => ({
+                        desc: post.desc || post.title || '',
+                        author: {
+                            unique_id: post.author?.unique_id || '',
+                            nickname: post.author?.nickname || ''
+                        },
+                        statistics: {
+                            play_count: post.statistics?.play_count || post.stats?.play_count || 0,
+                            digg_count: post.statistics?.digg_count || post.stats?.digg_count || 0
+                        }
+                    }));
+
+                    // Call serverless function to filter this batch
+                    const response = await fetch(claudeEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            posts: postsForClaude,
+                            city: city,
+                            minRelevanceScore: CONFIG.minRelevanceScore
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`Server error: ${response.status} - ${errorData.error}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (!data.success || !data.analyses) {
+                        throw new Error('Invalid response from Claude filter endpoint');
+                    }
+
+                    // Match analysis back to original posts for this batch
+                    for (const analysis of data.analyses) {
+                        if (analysis.relevant && analysis.score >= CONFIG.minRelevanceScore) {
+                            const originalPost = batchPosts[analysis.index];
+                            filteredPosts.push({
+                                ...originalPost,
+                                aiAnalysis: {
+                                    score: analysis.score,
+                                    outfit: analysis.outfit || '',
+                                    weather: analysis.weather || '',
+                                    insights: analysis.insights || ''
+                                }
+                            });
+                        }
                     }
                 }
+
                 return filteredPosts;
             } catch (error) {
                 console.error('Claude filtering error:', error);
@@ -831,7 +846,12 @@
 
                 // Step 2: Filter with Claude
                 console.log('Filtering posts with Claude...');
-                const filteredPosts = await filterPostsWithClaude(rawPosts, city);
+                const onBatchStatus = (msg) => {
+                    const panel = document.getElementById(city + '-panel');
+                    const statusEl = panel?.querySelector('.status');
+                    if (statusEl) statusEl.innerHTML = `✨ ${msg}`;
+                };
+                const filteredPosts = await filterPostsWithClaude(rawPosts, city, onBatchStatus);
                 console.log('Claude filtered to', filteredPosts.length, 'relevant posts');
 
                 // Step 3: Update state and render
