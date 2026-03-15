@@ -103,7 +103,8 @@ Only include posts with score >= ${minRelevanceScore || 6.5}. Be VERY strict - r
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': claudeApiKey
+        'x-api-key': claudeApiKey,
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-opus-4-6',
